@@ -1,0 +1,694 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Flash的结构简介由于本文章的主体为对LFS的介绍,介绍Flash也是为了引出LFS,因此这里对Flash的介绍也是点到为止,而不会太过深入.回到正题,开始正式介绍Flash. Flash是一种新兴的存储介质,一个完整的NAND闪存芯片布局如下图(来自https:&#x2F;&#x2F;flashdba.com&#x2F;)所示,一个芯片(或者说一个封装)中有多个Plane,而每个Plane中有多个Block,每个Block">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LFS--日志文件系统介绍">
+<meta property="og:url" content="http://example.com/2022/07/20/LSFS--%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Flash的结构简介由于本文章的主体为对LFS的介绍,介绍Flash也是为了引出LFS,因此这里对Flash的介绍也是点到为止,而不会太过深入.回到正题,开始正式介绍Flash. Flash是一种新兴的存储介质,一个完整的NAND闪存芯片布局如下图(来自https:&#x2F;&#x2F;flashdba.com&#x2F;)所示,一个芯片(或者说一个封装)中有多个Plane,而每个Plane中有多个Block,每个Block">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://flashdba.files.wordpress.com/2014/06/nand-flash-die-layout.png">
+<meta property="og:image" content="https://pic1.zhimg.com/80/v2-e2d18cf2debe20993e1cebc73ac43bd0_720w.jpg">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/d4hoYJlxOjMvlpLZq7rbttib4LozyaRwcFX0taTCicIw40VsyNlbOomcxQ3xSxE0R5uj2vYyGoH2YcgHgYKOniafg/640?wx_fmt=png&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="article:published_time" content="2022-07-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-07-28T14:44:05.181Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://flashdba.files.wordpress.com/2014/06/nand-flash-die-layout.png">
+  
+  
+  
+  <title>LFS--日志文件系统介绍 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>XHY&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LFS--日志文件系统介绍"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-07-20 00:00" pubdate>
+          2022年7月20日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          3.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          32 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">LFS--日志文件系统介绍</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="Flash的结构简介"><a href="#Flash的结构简介" class="headerlink" title="Flash的结构简介"></a>Flash的结构简介</h2><p>由于本文章的主体为对LFS的介绍,介绍Flash也是为了引出LFS,因此这里对Flash的介绍也是点到为止,而不会太过深入.回到正题,开始正式介绍Flash.</p>
+<p>Flash是一种新兴的存储介质,一个完整的NAND闪存芯片布局如下图(来自<a target="_blank" rel="noopener" href="https://flashdba.com/">https://flashdba.com/</a>)所示,一个芯片(或者说一个封装)中有多个Plane,而每个Plane中有多个Block,每个Block内又有多个Page,至于Page内就是我们常说的MLC,SLC等颗粒，这些是什么以及怎么通过硬件实现和控制的则不是我们的关注重点.下面描述一下Flash的读写特性.</p>
+<p><img src="https://flashdba.files.wordpress.com/2014/06/nand-flash-die-layout.png" srcset="/img/loading.gif" lazyload></p>
+<p>Flash支持三种最基本的操作：</p>
+<ol>
+<li>读，基本粒度是Page,也就是说你每次读的基本单位是Page</li>
+<li>写,基本单位也是Page,不过有一点要注意的是，<strong>写之前要对Page进行擦除</strong></li>
+<li>擦除，擦除的操作就是清空内容，但是<strong>擦除的基本单位是Block</strong>,也就是说Flash无法做到Page粒度的擦除操作</li>
+</ol>
+<p>在描述完上述的基本操作之后，相想必你也意识到了Flash的问题所在：无法精确地更新(包括变更部分内容或者擦除)一个Page，要做到这一点，你需要如下的步骤：</p>
+<ol>
+<li>找到一个空的Block</li>
+<li>将目标的整个block赋复制到一个这个空Block中</li>
+<li>擦除整个目标Block</li>
+<li>将你要更新的page的内容写入该block中的对应位置</li>
+<li>将不需要更新的page内容拷贝回原来的地方</li>
+<li>擦除最开始的空的Block</li>
+</ol>
+<p>显而易见，这样做是极不划算的，因为会使Flash的寿命大打折扣，因为每次更新都需要多次擦除不止一个Block.</p>
+<p>为了解决这一问题，我们可以使用一种简单的标记法假擦除的方法：</p>
+<ol>
+<li>找到一个空Block</li>
+<li>将要更新的Page以及不需要更新的Page写入这个空的block</li>
+<li>将原来的Block标记为无效</li>
+</ol>
+<p>这样做就一次擦除都不需要了，但是也带来了新的问题：首先从传统文件系统的角度来看，最严重的问题是数据块的物理地址(PBA)改了，那我下次读文件不是就读到错误的内容了吗？问题2就是这样做空余的block就会越来越少，但是无效的Block就会越来越多。</p>
+<p>面对一个复杂的计算机问题，抽象就是最好的解决办法，现在的Flash都在“逻辑数据块”和“物理数据块”之间添加了一个转换层：每次读写文件都要先经过这个转换层，转换层会根据输入的逻辑地址查找对应的物理地址，然后使用这个物理地址去对应的page中读取。这样一来就解决了问题1，因为我们改变block位置后更新这个转换层的映射表即可。这个所谓的转换层就是闪存转换层(flash translation layer,FTL)。为了解决问题2，这里需要引入一个<strong>垃圾回收</strong>过程，说简单点就是在后台定期地将无效的Block擦除，并标记为空闲的Block。实际上FTL承担的任务还有擦除均衡等内容，这里就不细说了。</p>
+<h2 id="Log-structured-File-System"><a href="#Log-structured-File-System" class="headerlink" title="Log-structured File System"></a>Log-structured File System</h2><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>上面对FTL的介绍实际上就引出了LFS——日志结构的文件系统。至于为什么这么说，看完后面对LFS的介绍就明白了。</p>
+<p>LFS一开始并不是为了Flash设备而设计的，因为它被提出的时候Flash还没那么流行。和传统的文件系统（如Ext4）最不同的事情是，<strong>LFS将随机读写转换成了顺序读写</strong>。这也是它叫”日志结构”文件系统的原因。LFS将整个存储介质看成一个append only的log文件,每次写入都是顺序写，内容总是追加在日志的最后,下图展示了LFS的基本原理：</p>
+<figure class="highlight coq"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs coq">Flash:  [ File1 | <span class="hljs-type">File2</span> | <span class="hljs-type">File1</span>&#x27;s update1| <span class="hljs-type">File2</span>&#x27;s update1 ]<br></code></pre></td></tr></table></figure>
+
+<p>下面举一个简单的粒子，文件S一开始有ABC三个块（文件系统读写的最小单位）：</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gherkin">[A|<span class="hljs-string">B</span>|<span class="hljs-string">C</span>|<span class="hljs-string">... ]</span><br></code></pre></td></tr></table></figure>
+
+<p>如果在这时候我更新文件S的A,C块，那么这时候块序列就会变成如下这样(暂时忽略元数据的组织):</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs gherkin">[(A)|<span class="hljs-string">B</span>|<span class="hljs-string">(C)</span>|<span class="hljs-string">A</span>|<span class="hljs-string">C</span>|<span class="hljs-string">...]</span><br></code></pre></td></tr></table></figure>
+
+<p>这里加括号的意思就<strong>旧的文件块会被标记为无效，而不是直接覆盖</strong>，如果覆盖的话就变成随机写了。</p>
+<p>在这种结构下LFS有着极高的写入速度，但是显然也存在着很大的问题:<strong>随着文件的更新，文件系统内部会产生大量的无效数据块，快速占满整个文件系统</strong>。</p>
+<p>面对这个问题，相信你也猜到了，就是进行<strong>垃圾回收</strong>：所谓的垃圾回收，就是<strong>在文件系统空闲或者文件系统没有空余空间的时候，对整个文件系统进行重排，删除无效的数据块以腾出空间的过程。</strong></p>
+<h3 id="LFS结构简单介绍"><a href="#LFS结构简单介绍" class="headerlink" title="LFS结构简单介绍"></a>LFS结构简单介绍</h3><p>在明白原理后，这里对LFS的元数据组织做下简单的介绍，因为后面还要介绍一个现在很流行的LFS实现，因此这里就简单说下。LFS将整个文件系统分为多个段(Segment),每个segment内部有多个Block，Block自身又分为三种：包含文件实际内容的块，存储inode信息的文件元数据块，组织段内Inode信息的inode map块。</p>
+<p><img src="https://pic1.zhimg.com/80/v2-e2d18cf2debe20993e1cebc73ac43bd0_720w.jpg" srcset="/img/loading.gif" lazyload></p>
+<p>(图来自<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/41358013">https://zhuanlan.zhihu.com/p/41358013</a>)</p>
+<p>每次向Sgement内写入多个数据块后LFS就会在后面追加一个inode块以对新追加的数据块进行索引,请注意Inode的位置并不固定，因此为了定位Inode的位置，LFS在每个segment尾部追加了一个索引inode的块，称之为Inode map。而每个inode map的位置则缓存在内存中。这样就形成了一个多级索引结构，用于对文件的读写。</p>
+<p>在LFS中读取一个inode号为i的文件的流程如下所示：</p>
+<ol>
+<li>从内存中缓存的inode map中读取所有段中inode为i的地址，也就和i相关的所有inode</li>
+<li>从每个inode中读取每个相关的data block的位置</li>
+<li>读取data block的位置</li>
+</ol>
+<p>这样的设计其实也挺麻烦的，要一级一级地往下读，因此这种设计并没有被广泛采用，直到LFS提出20年后，闪存技术高速发展，F2FS被提出，LFS才被慢慢广泛使用。</p>
+<h2 id="F2FS"><a href="#F2FS" class="headerlink" title="F2FS"></a>F2FS</h2><h3 id="简介-1"><a href="#简介-1" class="headerlink" title="简介"></a>简介</h3><p>F2FS是历史上第一个真正被广泛使用的日志文件系统。</p>
+<p>如下图所示：F2FS的主体分为metadata和data两个区域，前者主要存储元数据，采用普通的随机读写方式。后者是存储文件数据以及inode的数据区域，是典型的追加写的模式（或者说叫序列写）。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/d4hoYJlxOjMvlpLZq7rbttib4LozyaRwcFX0taTCicIw40VsyNlbOomcxQ3xSxE0R5uj2vYyGoH2YcgHgYKOniafg/640?wx_fmt=png&wxfrom=5&wx_lazy=1&wx_co=1" srcset="/img/loading.gif" lazyload></p>
+<h3 id="元数据区域"><a href="#元数据区域" class="headerlink" title="元数据区域"></a>元数据区域</h3><p>元数据区域分为如下几个部分：</p>
+<ol>
+<li>超级块（Super Block）包含一些基本的分区信息以及其他一些不变的信息，不是我们关注的重点</li>
+<li>段信息表(Segemnt Info Tale,SIT) 包含数据区域内每个段的有效块的数量以及标记每个块是否有效的位图，该部分的元数据主要用于垃圾回收过程中需要搬移的段以及识别段中的有效数据</li>
+<li>索引节点表(Node Address Table, NAT) 用于定位数据区域中的索引节点块，包括每个inode节点的地址等信息。</li>
+<li>段摘要区域(Segment Summary Table,SST)数据区域中所有数据块的父节点信息，也就是一个反向索引（用于当当前节点的位置发生变化时候更新父节点信息）</li>
+<li>检查点(CP): 保存文件系统的状态，方便崩溃和掉电后的系统崩溃等。</li>
+</ol>
+<h3 id="数据区域"><a href="#数据区域" class="headerlink" title="数据区域"></a>数据区域</h3><p>和F2LS的结构基本相同，F2FS中的数据区域也由多个Segment排列而成。每个Segment中有多个数据块以及多个Inode节点，Inode用于索引数据块，而Inode的地址则被存储在元数据区中的NAT表中。由于NAT表的存在，F2FS中就不存在Inode map这种东西了。</p>
+<h3 id="Workflow"><a href="#Workflow" class="headerlink" title="Workflow"></a>Workflow</h3><p>下面介绍下F2FS的工作流程。</p>
+<p><strong>写</strong>.和最开始的LFS一样,F2FS也是直接往段的尾部追加文件块和Inode信息,在写完文件块后LSFS会更新NAT表以把新增加Inode纳入NAT的索引中,这时候不要忘记旧Block已经无效了,因此这里还要更新SIT表更新有效性索引信息便于垃圾回收,请注意删除也是写的一种,因此这里不再独立讲删除流程.</p>
+<p><strong>读</strong>.为了读一个文件,F2FS会在NAT表中查询该文件所有的Inode节点的位置,并根据这些位置信息读取所有的Inode节点,最后根据Inode节点读取所有有效的文件Block,最后选最新(即有效)的Block组合到一起即可</p>
+<p><strong>垃圾回收</strong>.当如下两个条件发生一个时,F2FS会以一定的策略进行垃圾回收:</p>
+<ol>
+<li>在追加文件块的时候发现整个文件系统中已经没有空闲段</li>
+<li>文件系统的IO空闲的时候(有后台线程管理这个事情)</li>
+</ol>
+<p>在上述两个条件满足一个的时候,文件系统会读取SIT表,也就是所有段内数据块的有效性信息,找到一些<strong>包含最少有效块</strong>的segment,并使用随机读写的方式删除所有的无效块,然后把所有的有效块挪到段的头部方便后面再次写入.这时候由于有大量的文件块被移动了,为了防止父节点找不到该数据块的情况,因此这里还需要修改SST表已更新父节点的信息.</p>
+<p>F2FS的实际设计远比我这里写的要复杂,总之这篇文章的主要目的还是做个简单的总结.</p>
+<h4 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h4><ol>
+<li><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzAxMDM0NjExNA==&mid=2247483792&idx=1&sn=3653294db298b1a42263ccb526592f69&scene=21#wechat_redirect">https://mp.weixin.qq.com/s?__biz&#x3D;MzAxMDM0NjExNA&#x3D;&#x3D;&amp;mid&#x3D;2247483792&amp;idx&#x3D;1&amp;sn&#x3D;3653294db298b1a42263ccb526592f69&amp;scene&#x3D;21#wechat_redirect</a></li>
+<li><a target="_blank" rel="noopener" href="https://flashdba.com/2014/06/20/understanding-flash-blocks-pages-and-program-erases/">https://flashdba.com/2014/06/20/understanding-flash-blocks-pages-and-program-erases/</a></li>
+</ol>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LFS--日志文件系统介绍</div>
+      <div>http://example.com/2022/07/20/LSFS--日志文件系统原理介绍/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2022年7月20日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/08/12/PUF%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/" title="P=NP?--算法复杂性和NP问题概述">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">P=NP?--算法复杂性和NP问题概述</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/07/05/%E5%A6%82%E4%BD%95%E7%BB%B4%E6%8A%A4%E4%B8%80%E4%B8%AAC++%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE--%E4%BB%8E%E7%BC%96%E8%AF%91%E5%99%A8%E5%88%B0Github/" title="如何维护一个C++开源项目--从编译器到Github">
+                        <span class="hidden-mobile">如何维护一个C++开源项目--从编译器到Github</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

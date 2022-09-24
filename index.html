@@ -1,0 +1,676 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta property="og:type" content="website">
+<meta property="og:title" content="Hexo">
+<meta property="og:url" content="http://example.com/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 100vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>XHY&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Talk is cheap, show me your code"></span>
+          
+        </div>
+
+        
+      </div>
+
+      
+        <div class="scroll-down-bar">
+          <i class="iconfont icon-arrowdown"></i>
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      <div class="container nopadding-x-md">
+        <div id="board"
+          style="margin-top: 0">
+          
+          <div class="container">
+            <div class="row">
+              <div class="col-12 col-md-10 m-auto">
+                
+
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/08/12/PUF%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/" target="_self">
+          P=NP?--算法复杂性和NP问题概述
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/08/12/PUF%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/" target="_self">
+        <div>
+          PUF（物理不可克隆功能）理论定义PUF指的是在物理上对于任意激励产生的一个唯一且不可预测的输出响应，通常基于半导体制造过程中自然发生的独特物理变化。 1任意激励--&gt;[  PUF发生器  ]--&gt; 唯一且不可预测的特征响应  SRAM PUF目前的PUF一般都是基于SRAM的PUF实现(具体原理由于不是重点因此不细讲),可直接集成到IOT设备&#x2F;芯片中。 特点：  无需编程&
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-08-12 00:00" pubdate>
+              2022-08-12
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/07/20/LSFS--%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D/" target="_self">
+          LFS--日志文件系统介绍
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/07/20/LSFS--%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D/" target="_self">
+        <div>
+          Flash的结构简介由于本文章的主体为对LFS的介绍,介绍Flash也是为了引出LFS,因此这里对Flash的介绍也是点到为止,而不会太过深入.回到正题,开始正式介绍Flash. Flash是一种新兴的存储介质,一个完整的NAND闪存芯片布局如下图(来自https://flashdba.com/)所示,一个芯片(或者说一个封装)中有多个Plane,而每个Plane中有多个Block,每个Block
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-07-20 00:00" pubdate>
+              2022-07-20
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/07/05/%E5%A6%82%E4%BD%95%E7%BB%B4%E6%8A%A4%E4%B8%80%E4%B8%AAC++%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE--%E4%BB%8E%E7%BC%96%E8%AF%91%E5%99%A8%E5%88%B0Github/" target="_self">
+          如何维护一个C++开源项目--从编译器到Github
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/07/05/%E5%A6%82%E4%BD%95%E7%BB%B4%E6%8A%A4%E4%B8%80%E4%B8%AAC++%E5%BC%80%E6%BA%90%E9%A1%B9%E7%9B%AE--%E4%BB%8E%E7%BC%96%E8%AF%91%E5%99%A8%E5%88%B0Github/" target="_self">
+        <div>
+          前言2020年年中的时候，我在Github上开源了一个简单的Minecraft模组(下面以tr代称)，由于受到社区的广好评，我就一直维护，到现在依然在更新。虽然目前只有180个星星，但是这个小项目也见证了我在C++以及开源这方面不小的成长。因此，趁着没事干这一契机，打算把我之前遇到的问题以及经验写下来，供给其他人参考。 软件开发与维护设计​	本科学软件工程的时候我就知道，要想软件扩展性高，就要进行
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-07-05 00:00" pubdate>
+              2022-07-05
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/06/20/%E5%8F%B2%E8%AF%97%E7%BA%A7%E9%80%80%E5%8C%96%E2%80%94%E2%80%94%E5%85%A8%E6%96%B0%E7%9A%84%E5%8D%9A%E5%AE%A2%E7%B3%BB%E7%BB%9F/" target="_self">
+          史诗级退化——全新的博客系统
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/06/20/%E5%8F%B2%E8%AF%97%E7%BA%A7%E9%80%80%E5%8C%96%E2%80%94%E2%80%94%E5%85%A8%E6%96%B0%E7%9A%84%E5%8D%9A%E5%AE%A2%E7%B3%BB%E7%BB%9F/" target="_self">
+        <div>
+          史诗级退化——全新的博客系统背景​	六月月初换了个新电脑，准备把原来的hexo博客迁移过去，发现重新生成&#x2F;部署的时候产生了一些问题，正准备全部重新弄一遍。在找主题的时候确犯了强迫症。最后受到https://eklitzke.org/的启发，准备自己手撸一个。反正轮子也造习惯了，不差这一回。 设计​	反正是静态博客，也不需要啥后端，于是最后的设计目标就是根据markdown文件生成html
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-06-20 00:00" pubdate>
+              2022-06-20
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/05/30/%E9%98%BB%E5%A1%9E-%E9%9D%9E%E9%98%BB%E5%A1%9EIO%E4%BB%A5%E5%8F%8AEPoll/" target="_self">
+          阻塞/非阻塞I/O以及Epoll
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/05/30/%E9%98%BB%E5%A1%9E-%E9%9D%9E%E9%98%BB%E5%A1%9EIO%E4%BB%A5%E5%8F%8AEPoll/" target="_self">
+        <div>
+          翻译自 Blocking I&#x2F;O, Nonblocking I&#x2F;O, And Epoll (eklitzke.org)  在这篇文章中，我想解释下当你使用非阻塞的IO(NO blocking I&#x2F;O)的时候发生了什么，具体来说我会解释如下几点：  使用系统调用fcntl将文件描述符设置为O_NONBLOCK的语义 非阻塞I&#x2F;O和异步I&#x2F;O(asy
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-05-30 00:00" pubdate>
+              2022-05-30
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/05/05/C%E8%AF%AD%E8%A8%80%E7%9A%84%E8%BF%90%E8%A1%8C%E6%97%B6/" target="_self">
+          C语言的运行时
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/05/05/C%E8%AF%AD%E8%A8%80%E7%9A%84%E8%BF%90%E8%A1%8C%E6%97%B6/" target="_self">
+        <div>
+          
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-05-05 00:00" pubdate>
+              2022-05-05
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/04/29/leetcode%E8%A7%A3%E9%A2%98%E8%AE%B0%E5%BD%95-1/" target="_self">
+          leetcode解题记录(1)
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/04/29/leetcode%E8%A7%A3%E9%A2%98%E8%AE%B0%E5%BD%95-1/" target="_self">
+        <div>
+          作业太多不想做，把最近在leetcode上做的题稍微总结一下，既然标题写了1，就说明还是想把这个做成一个系列的。 粉刷房子基础的dp题，从上往下挨个算最小值即可，时间O(n)，空间O(1) 12345678910111213141516class Solution &#123;public:    int minCost(vector&lt;vector&lt;int&gt;&gt;&amp; c
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-04-29 00:00" pubdate>
+              2022-04-29
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/04/27/%E5%A6%82%E4%BD%95%E6%89%8B%E5%8A%A8%E8%A7%A3%E5%8E%8B%E5%8E%8B%E7%BC%A9%E5%8C%85-%E9%9B%BE-GZ%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E8%AF%A6%E8%A7%A3/" target="_self">
+          如何手动解压压缩包(雾)--GZ文件格式详解
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/04/27/%E5%A6%82%E4%BD%95%E6%89%8B%E5%8A%A8%E8%A7%A3%E5%8E%8B%E5%8E%8B%E7%BC%A9%E5%8C%85-%E9%9B%BE-GZ%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E8%AF%A6%E8%A7%A3/" target="_self">
+        <div>
+          如何手解压缩包（雾）–GZIP 文件结构概述一个GZIP文件主体分为三个部分,如下图所示： 1[header][deflate block|...][header]  其中头部是元数据，中间是deflate的压缩数据块，尾部是固定8byte的元数据，接下来具体详细地介绍这三个部分。 Header和其他格式一样，Gzip文件的头部定义了该文件的元数据信息。该部分的长度不固定，至少10byte大小，其
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-04-27 00:00" pubdate>
+              2022-04-27
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2022/04/15/TLS-SSL%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81HTTPS%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%AE%89%E5%85%A8/" target="_self">
+          TLS/SSL如何保证HTTPS协议的安全
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2022/04/15/TLS-SSL%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81HTTPS%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%AE%89%E5%85%A8/" target="_self">
+        <div>
+          TLS&#x2F;SSL如何保证HTTPS协议的安全概述  1999年6月，万维网协会(W3C)和互联网工程任务组（IETF）共同发布了RFC2616，这份标准规范化了接下来20年里十分重要的一个协议–HTTP。HTTP协议是一个客户端和服务端之间进行请求和应答的标准，能够让客户端使用标准的方式从服务器内获取各种资源，如HTML，数字图像等等。   虽然HTTP得到了广泛的使用，但是HTTP的安全
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2022-04-15 00:00" pubdate>
+              2022-04-15
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+    <article class="col-12 col-md-12 mx-auto index-info">
+      <h1 class="index-header">
+        
+        <a href="/2021/12/27/Gzip%E6%98%AF%E5%A6%82%E4%BD%95%E5%8E%8B%E7%BC%A9%E6%96%87%E4%BB%B6%E7%9A%84/" target="_self">
+          Gzip是如何压缩文件的
+        </a>
+      </h1>
+
+      
+      <a class="index-excerpt index-excerpt__noimg" href="/2021/12/27/Gzip%E6%98%AF%E5%A6%82%E4%BD%95%E5%8E%8B%E7%BC%A9%E6%96%87%E4%BB%B6%E7%9A%84/" target="_self">
+        <div>
+          Gzip 是如何工作的简介Gzip使用deflate算法对数据流进行压缩，该算法分1-9一共9个压缩等级，等级越低压缩率越低压缩速度越快。下面使用默认的6级来来说明。Deflate算法该分为LZ77和霍夫曼编码两个部分：前者负责压缩，后者负责编码（其实编码和压缩是一个意思）这里使用字符串abcabcaaabaaa为例来描述算法的总体流程：Gzip首先使用LZ77算法来对该字符串做压缩，得到如下的L
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-12-27 00:00" pubdate>
+              2021-12-27
+            </time>
+          </div>
+        
+        
+        
+      </div>
+    </article>
+  </div>
+
+
+
+  <nav aria-label="navigation">
+    <span class="pagination" id="pagination">
+      <span class="page-number current">1</span><a class="page-number" href="/page/2/#board">2</a><a class="page-number" href="/page/3/#board">3</a><a class="page-number" href="/page/4/#board">4</a><a class="extend next" rel="next" href="/page/2/#board"><i class="iconfont icon-arrowright"></i></a>
+    </span>
+  </nav>
+
+
+
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>

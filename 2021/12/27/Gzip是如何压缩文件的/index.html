@@ -1,0 +1,653 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="Gzip 是如何工作的简介Gzip使用deflate算法对数据流进行压缩，该算法分1-9一共9个压缩等级，等级越低压缩率越低压缩速度越快。下面使用默认的6级来来说明。Deflate算法该分为LZ77和霍夫曼编码两个部分：前者负责压缩，后者负责编码（其实编码和压缩是一个意思）这里使用字符串abcabcaaabaaa为例来描述算法的总体流程：Gzip首先使用LZ77算法来对该字符串做压缩，得到如下的L">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Gzip是如何压缩文件的">
+<meta property="og:url" content="http://example.com/2021/12/27/Gzip%E6%98%AF%E5%A6%82%E4%BD%95%E5%8E%8B%E7%BC%A9%E6%96%87%E4%BB%B6%E7%9A%84/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="Gzip 是如何工作的简介Gzip使用deflate算法对数据流进行压缩，该算法分1-9一共9个压缩等级，等级越低压缩率越低压缩速度越快。下面使用默认的6级来来说明。Deflate算法该分为LZ77和霍夫曼编码两个部分：前者负责压缩，后者负责编码（其实编码和压缩是一个意思）这里使用字符串abcabcaaabaaa为例来描述算法的总体流程：Gzip首先使用LZ77算法来对该字符串做压缩，得到如下的L">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2021-12-26T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-06-18T16:28:12.095Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>Gzip是如何压缩文件的 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>XHY&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="Gzip是如何压缩文件的"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2021-12-27 00:00" pubdate>
+          2021年12月27日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.2k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          19 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">Gzip是如何压缩文件的</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="Gzip-是如何工作的"><a href="#Gzip-是如何工作的" class="headerlink" title="Gzip 是如何工作的"></a>Gzip 是如何工作的</h2><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>Gzip使用<code>deflate</code>算法对数据流进行压缩，该算法分1-9一共9个压缩等级，等级越低压缩率越低压缩速度越快。下面使用默认的6级来来说明。<code>Deflate</code>算法该分为LZ77和霍夫曼编码两个部分：前者负责压缩，后者负责编码（其实编码和压缩是一个意思）这里使用字符串<code>abcabcaaabaaa</code>为例来描述算法的总体流程：Gzip首先使用LZ77算法来对该字符串做压缩，得到如下的LZZ编码串（括号和逗号只是为了方便理解，不包括在LZZ编码串内）：</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs stylus"><span class="hljs-function"><span class="hljs-title">abc</span><span class="hljs-params">(<span class="hljs-number">3</span>,<span class="hljs-number">3</span>)</span><span class="hljs-title">aaab</span><span class="hljs-params">(<span class="hljs-number">4</span>,<span class="hljs-number">3</span>)</span></span><br></code></pre></td></tr></table></figure>
+
+<p>这其中的abc就是表示直接把原来的abc复制过来，<code>(4,3)</code>表示从该位置前方4个字符开始往后的三个字符赋值到当前位置，也就是重复一次abc。在这样一个串中，称abc为未匹配的字符串字面量，简称字面量。<code>(distance,length)</code>称为一个有序匹配对，简称匹配对，其中distance表示距离，length表示匹配串的长度。</p>
+<p>​	</p>
+<p>下面针对这两个部分做详细解释。</p>
+<h3 id="LZ77算法"><a href="#LZ77算法" class="headerlink" title="LZ77算法"></a>LZ77算法</h3><p>在gzip的实现中，LZ77需要对一个串找最短匹配长度为3的匹配长度最长的匹配串（也就是最长的相同子串，但是要求最短长度为3）gzip使用数组实现了一个小型的哈希表，哈希的key是根据子串的前三个字符算出来的一个哈希值（这里为方便起见直接使用字符串本身作为哈希值），value是一个链，链中展示了所有以这个三个字符开始的字串的首字母下标位置，下标越大越排在前面。以</p>
+<figure class="highlight tap"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs tap">[a a b c a a b c]<br>[0<span class="hljs-number"> 1 </span>2<span class="hljs-number"> 3 </span>4<span class="hljs-number"> 5 </span>6 7]<br></code></pre></td></tr></table></figure>
+
+<p>为例，其哈希表是这样的：</p>
+<figure class="highlight css"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs css"><span class="hljs-selector-attr">[aab]</span> --&gt;<span class="hljs-selector-attr">[4]</span>-&gt;<span class="hljs-selector-attr">[0]</span><br><span class="hljs-selector-attr">[abc]</span> --&gt;<span class="hljs-selector-attr">[5]</span>-&gt;<span class="hljs-selector-attr">[1]</span><br><span class="hljs-selector-attr">[bca]</span> --&gt;<span class="hljs-selector-attr">[2]</span><br><span class="hljs-selector-attr">[caa]</span> --&gt;<span class="hljs-selector-attr">[3]</span><br></code></pre></td></tr></table></figure>
+
+<p>后面的匹配过程都是根据这个哈希表来完成。当算法扫描到第一个<code>aab</code>时候，发现<code>aab</code>对应的哈希链是空的，也就是说一定不存在与之相匹配的串，就将其插入哈希表中。持续这样操作直扫描到第二个<code>aab</code>时，算法发现该哈希对应的链上已经链接了其它的字符串，这说明前面已经出现过字符串<code>aab</code>了，于是这里可以得到一个匹配对<code>(4,3)</code>，表示该位置前面存在一个长度为3的相同串。但是这时候算法还不能确定<code>(4,3)</code>就是最后的匹配，因为后面可能还有更长的。这里算法使用了懒惰匹配算法：当出现一个的匹配后，算法不会直接确定该匹配，直到下一个匹配比当前匹配更短，这时候就确定上一个匹配为最佳匹配，并将其写入LZ77编码串中。</p>
+<p>这里LZ77规定匹配串的最小长度是3，最大长度是258。</p>
+<p>每当向LZ77编码串写入一个字符串字面或者写入一个匹配对，Gzip就会对该串频率统计以方便后面的霍夫曼编码。当达到以下条件时算法会对当前的LZ77编码串做一次霍夫曼编码：</p>
+<p>这里首先定义<strong>LZ77编码串的长度为:字符串字面量的个数+匹配对的个数</strong></p>
+<ol>
+<li><p>每当<code>len(lz77_string) % 4096 = 0</code>时（也就是编码串的长度达到一次4096时）进行一次的判定：</p>
+<ol>
+<li>预估的压缩数据的长度小于原始长度的一半（这里的预估是使用一种有较多的冗余编码方法对编码串进行编码后的输出长度）</li>
+<li>匹配对的个数少于未匹配对的个数</li>
+</ol>
+<p>如果以上两个条件都满足，就当前编码串的所有内容进行霍夫曼编码，并清空LZ77编码串缓存。</p>
+</li>
+<li><p>每次LZ77编码串接收新的字符串字面量或者匹配对时：</p>
+<p>如果LZ77串的长度(字符字面量的个数+匹配对的个数达到了32767)或者匹配对的个数达到了32768就进行一次刷洗，将当前的LZ77压缩串传给霍夫曼编码。</p>
+</li>
+</ol>
+<h3 id="霍夫曼编码实现"><a href="#霍夫曼编码实现" class="headerlink" title="霍夫曼编码实现"></a>霍夫曼编码实现</h3><p>前面已经说到，gzip会分别采用静态和动态编码对LZ77压缩串进行压缩，两者唯一的区别是前者如使用内置的固定编码对LZ77的字符串字面量和匹配对进行编码，并将压缩数据写入压缩文件，而后者则使用根据串的频率信息计算出来的编码。</p>
+<p>对于静态编码，内置的编码是什么样的这里不做过多赘述。下面简单叙述一下动态编码的规则。</p>
+<p>gzip把字面量和匹配的长度放到一棵霍夫曼树中，这些一共有286个节点：</p>
+<ol>
+<li>0-255：对应<code>0x00-0XFF</code>中的256种byte</li>
+<li>256：一共霍夫曼压缩块的结束标记</li>
+<li>257-285表示匹配长度的29个范围。由于匹配长度的范围为[3,258],因此这里这里把<code>258+3-1=256</code>个匹配串的长度分配给这29个编码中（实际的编码后面会再跟特定的bit序列来表明具体是哪个值），具体如何分配的这里不再赘述。</li>
+</ol>
+<p>而gzip对距离编码则采用一棵单独的有30个叶子节点的树进行编码，由于距离长度的范围是<code>[1,32768]</code>,因此这里也要把32768个距离值分配到这个30个叶子节点中，也和匹配长度一样，编码后面会跟随特定的比特序列来确定具体是哪一个距离值。由于在接收LZ77编码那个步骤中已经完成了基本的频率统计，因此霍夫曼编码这一步就是根据频率统计信息构建一棵特殊的霍夫曼树，并根据树结构赋予不同的叶子节点不同的编码即可。</p>
+<p>最后gzip依次将或父母编码的元数据(包括编码信息和编码类型等)写入压缩文件,并写入编码后的数据和结束标记，这样就完成了一个压缩数据块的写入工作。</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><a target="_blank" rel="noopener" href="http://staff.ustc.edu.cn/~yuzhang/ds/gzip/gzip_principle.htm">http://staff.ustc.edu.cn/~yuzhang&#x2F;ds&#x2F;gzip&#x2F;gzip_principle.htm</a></p>
+<p><a target="_blank" rel="noopener" href="https://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art053">https://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art053</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>Gzip是如何压缩文件的</div>
+      <div>http://example.com/2021/12/27/Gzip是如何压缩文件的/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>John Doe</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2021年12月27日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2022/04/15/TLS-SSL%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81HTTPS%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%AE%89%E5%85%A8/" title="TLS/SSL如何保证HTTPS协议的安全">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">TLS/SSL如何保证HTTPS协议的安全</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2021/12/10/%E7%AE%80%E5%8D%95%E7%9A%84RPC%E6%A1%86%E6%9E%B6%E8%AE%BE%E8%AE%A1%E5%92%8C%E5%AE%9E%E7%8E%B0/" title="简单的RPC框架设计和实现">
+                        <span class="hidden-mobile">简单的RPC框架设计和实现</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
