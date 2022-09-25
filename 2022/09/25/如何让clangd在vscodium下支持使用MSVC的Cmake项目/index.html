@@ -16,23 +16,21 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="PUF（物理不可克隆功能）理论定义PUF指的是在物理上对于任意激励产生的一个唯一且不可预测的输出响应，通常基于半导体制造过程中自然发生的独特物理变化。 1任意激励--&gt;[  PUF发生器  ]--&gt; 唯一且不可预测的特征响应  SRAM PUF目前的PUF一般都是基于SRAM的PUF实现(具体原理由于不是重点因此不细讲),可直接集成到IOT设备&#x2F;芯片中。 特点：  无需编程&amp;">
+    <meta name="description" content="背景由于下面的一些原因：  不想使用微软开发的C++插件(一是Vscodium内不提供，二是这东西确实不太好用，3.5分) 项目使用Cmake + MSVC构建(Gcc或者说Mingw的ABI和项目不兼容)  我就产生了标题的想法，也就是说如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程,或者表述为一个比较常见的场景：如何抛弃微软的C++插件在vscode&#x2F;v">
 <meta property="og:type" content="article">
-<meta property="og:title" content="P&#x3D;NP?--算法复杂性和NP问题概述">
-<meta property="og:url" content="http://example.com/2022/08/12/PUF%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/index.html">
+<meta property="og:title" content="如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程">
+<meta property="og:url" content="http://example.com/2022/09/25/%E5%A6%82%E4%BD%95%E8%AE%A9clangd%E5%9C%A8vscodium%E4%B8%8B%E6%94%AF%E6%8C%81%E4%BD%BF%E7%94%A8MSVC%E7%9A%84Cmake%E9%A1%B9%E7%9B%AE/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="PUF（物理不可克隆功能）理论定义PUF指的是在物理上对于任意激励产生的一个唯一且不可预测的输出响应，通常基于半导体制造过程中自然发生的独特物理变化。 1任意激励--&gt;[  PUF发生器  ]--&gt; 唯一且不可预测的特征响应  SRAM PUF目前的PUF一般都是基于SRAM的PUF实现(具体原理由于不是重点因此不细讲),可直接集成到IOT设备&#x2F;芯片中。 特点：  无需编程&amp;">
+<meta property="og:description" content="背景由于下面的一些原因：  不想使用微软开发的C++插件(一是Vscodium内不提供，二是这东西确实不太好用，3.5分) 项目使用Cmake + MSVC构建(Gcc或者说Mingw的ABI和项目不兼容)  我就产生了标题的想法，也就是说如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程,或者表述为一个比较常见的场景：如何抛弃微软的C++插件在vscode&#x2F;v">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://tvax1.sinaimg.cn/large/007bwgzIgy1h54g71ucyqj30qv09bwgd.jpg">
-<meta property="article:published_time" content="2022-08-11T16:00:00.000Z">
-<meta property="article:modified_time" content="2022-08-12T16:29:11.653Z">
+<meta property="article:published_time" content="2022-09-25T07:17:00.000Z">
+<meta property="article:modified_time" content="2022-09-25T08:16:13.963Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://tvax1.sinaimg.cn/large/007bwgzIgy1h54g71ucyqj30qv09bwgd.jpg">
   
   
   
-  <title>P=NP?--算法复杂性和NP问题概述 - Hexo</title>
+  <title>如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -197,7 +195,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="P=NP?--算法复杂性和NP问题概述"></span>
+            <span id="subtitle" data-typed-text="如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程"></span>
           
         </div>
 
@@ -208,8 +206,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2022-08-12 00:00" pubdate>
-          2022年8月12日 凌晨
+        <time datetime="2022-09-25 15:17" pubdate>
+          2022年9月25日 下午
         </time>
       </span>
     
@@ -220,7 +218,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          984 字
+          2.3k 字
         
       </span>
     
@@ -231,7 +229,7 @@
         
         
         
-          9 分钟
+          19 分钟
         
       </span>
     
@@ -269,55 +267,48 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">P=NP?--算法复杂性和NP问题概述</h1>
+            <h1 style="display: none">如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="PUF（物理不可克隆功能）"><a href="#PUF（物理不可克隆功能）" class="headerlink" title="PUF（物理不可克隆功能）"></a>PUF（物理不可克隆功能）</h2><h3 id="理论定义"><a href="#理论定义" class="headerlink" title="理论定义"></a>理论定义</h3><p>PUF指的是在物理上对于<strong>任意激励</strong>产生的一个<strong>唯一</strong>且不可预测的输出响应，通常基于半导体制造过程中自然发生的独特物理变化。</p>
-<figure class="highlight brainfuck"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs brainfuck"><span class="hljs-comment">任意激励</span><span class="hljs-literal">--</span>&gt;<span class="hljs-title">[</span>  <span class="hljs-comment">PUF发生器</span>  <span class="hljs-title">]</span><span class="hljs-literal">--</span>&gt; <span class="hljs-comment">唯一且不可预测的特征响应</span><br></code></pre></td></tr></table></figure>
+                <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>由于下面的一些原因：</p>
+<ol>
+<li>不想使用微软开发的C++插件(一是Vscodium内不提供，二是这东西确实不太好用，3.5分)</li>
+<li>项目使用Cmake + MSVC构建(Gcc或者说Mingw的ABI和项目不兼容)</li>
+</ol>
+<p>我就产生了标题的想法，也就是说如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程,或者表述为一个比较常见的场景：如何抛弃微软的C++插件在vscode&#x2F;vscodium上使用MSVC开发C++。</p>
+<p>为了达到这一目的，我很快就找到了LLVM官方提供的C++ LSP: clangd。但是在windows下使用这个插件还是需要折腾下的的，一方面是好多人不会翻阅文档，另一方面是Cmake在某些方面比较拐弯抹角。</p>
+<p>下面我从一个新安装的Vscodium(完全开源并重新打包的vscode)开始一步步描述怎么在windows下正常使用<code>clangd</code>.</p>
+<h2 id="教程"><a href="#教程" class="headerlink" title="教程"></a>教程</h2><p>这里已经默认你已经安装好了CMake和MSVC.</p>
+<h3 id="安装-llvm"><a href="#安装-llvm" class="headerlink" title="安装 llvm"></a>安装 llvm</h3><p>clangd的本体是llbm工程的一部分，使用这个东西自然要安装llvm，不要嫌弃llvm太大，虽然它的大部分功能我们大概用不到，但是里面的好多小工具还是挺好的，比如clang-tidy, clanng-format等等。</p>
+<p>前往llvm的github主页下载安装器，双击安装，然后添加环境变量，这一步应该不用我多说，和普通的开发相关软件的安装方法一样，在这一步完成后打开终端输入相关命令检查安装是否正常：</p>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs powershell"><span class="hljs-built_in">PS</span> C:\Users\xhy\blog&gt; clang<span class="hljs-literal">-format</span> <span class="hljs-literal">--version</span><br>clang<span class="hljs-literal">-format</span> version <span class="hljs-number">14.0</span>.<span class="hljs-number">0</span><br><span class="hljs-built_in">PS</span> C:\Users\xhy\blog&gt; clang <span class="hljs-literal">--version</span><br>clang version <span class="hljs-number">14.0</span>.<span class="hljs-number">0</span><br>Target: x86_64<span class="hljs-literal">-pc-windows-msvc</span><br>Thread model: posix<br>InstalledDir: C:\Program Files\LLVM\bin<br><span class="hljs-built_in">PS</span> C:\Users\xhy\blog&gt; clangd <span class="hljs-literal">--version</span><br>clangd version <span class="hljs-number">14.0</span>.<span class="hljs-number">0</span><br>Features: windows<br>Platform: x86_64<span class="hljs-literal">-pc-windows-msvc</span><br><span class="hljs-built_in">PS</span> C:\Users\xhy\blog&gt;<br></code></pre></td></tr></table></figure>
 
-<h3 id="SRAM-PUF"><a href="#SRAM-PUF" class="headerlink" title="SRAM PUF"></a>SRAM PUF</h3><p>目前的PUF一般都是基于SRAM的PUF实现(具体原理由于不是重点因此不细讲),可直接集成到IOT设备&#x2F;芯片中。</p>
-<p>特点：</p>
-<ul>
-<li>无需编程&#x2F;无需从外部获取熵(随机性)</li>
-<li>即时生成，设备断电后不会存储任何PUF指纹信息</li>
-<li>通用性强(芯片都有SRAM)</li>
-</ul>
-<p>IOT设备的<strong>SRAM PUF响应在设备制造出来时，就已确定</strong>。</p>
-<p>这里要注意一点，虽然<strong>PUF响应唯一，但是响应的实际比特序列会受到温度，电压等环境的影响</strong>，因此响应不能直接用作密钥或者认证标识，将其转换成高质量的安全密钥需要进一步处理,如<strong>滤波，纠错</strong>等方法。</p>
-<h2 id="认证技术"><a href="#认证技术" class="headerlink" title="认证技术"></a>认证技术</h2><p>一种权限验证的大致框架(由论文简化而来<a target="_blank" rel="noopener" href="https://ieeexplore.ieee.org/document/9233424)%EF%BC%9A">https://ieeexplore.ieee.org/document/9233424)：</a></p>
-<p><img src="https://tvax1.sinaimg.cn/large/007bwgzIgy1h54g71ucyqj30qv09bwgd.jpg" srcset="/img/loading.gif" lazyload alt="image"></p>
-<p>在描述整个过程之前需要明确：</p>
+<h3 id="安装-ninja"><a href="#安装-ninja" class="headerlink" title="安装 ninja"></a>安装 ninja</h3><p><code>clangd</code>对于Cmake的支持需要借助一个名叫<code>compile_commands.json</code>的文件来进行，这个文件记录了编译整个工程需要执行的所有编译命令等信息。如果直接使用<code>Cmake .. -G &quot;Visual Studo 17 2022&quot;</code>，Cmake则不会生成<code>compile_commands.json</code>。这是因为官方文档上写着Camke仅支持在<code>Ninja</code>和<code>GUN Makefiles</code>规则下支持<code>compile_commands.json</code>，至于为什么会这样我也不清楚，因此为了生成这个文件，我们只能借助<code>ninja</code>这个小构建工具。</p>
+<p>安装的步骤也不用多讲,这东西就一个可执行文件,将其放到任意目录,然后添加环境变量即可,输入<code>ninja --version</code>:</p>
+<figure class="highlight moonscript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs moonscript">PS <span class="hljs-name">C</span>:\Users\xhy\Desktop\ninja&gt; ninja <span class="hljs-comment">--version</span><br><span class="hljs-number">1.10</span><span class="hljs-number">.2</span><br></code></pre></td></tr></table></figure>
+
+
+
+<h3 id="安装相关插件"><a href="#安装相关插件" class="headerlink" title="安装相关插件"></a>安装相关插件</h3><p>请注意，这里我们仅需要安装如下两个插件:</p>
 <ol>
-<li><p>PUF的唯一响应在使用前<strong>需要使用特定的算法进行纠错和滤波,经过该操作后才称为硬件指纹</strong></p>
-</li>
-<li><p><strong>边缘节点已经记录了自己所连接的所有IOT设备的硬件指纹(纠错后的PUF响应，由IOT设备的制造商提供)</strong></p>
-</li>
-<li><p>边缘节点生Challenge(具体生成看不同的算法，但是为了安全性需要带有随机性)</p>
-</li>
-<li><p>边缘节点将Challenge加密后发送给IOT设备</p>
-</li>
-<li><p>IOT设备根据解密后的Challenge和自身的硬件指纹，使用一组特定的算法(即身份验证HASH生成器)生成特定的哈希(这个哈希在后面被用作鉴权)</p>
-</li>
-<li><p>IOT设备将加密后哈希(可能包含其他信息)发送给边缘节点</p>
-</li>
-<li><p>边缘节点对收到的加密哈希进行解密操作复原出IOT设备的HASH1</p>
-</li>
-<li><p>边缘节点从自身存储的IOT硬件指纹表中查询该IOT的硬件指纹，使用和IOT端相同的输入算法(即在本地算一遍第三步)计算出一个HASH2</p>
-</li>
-<li><p>将本地计算出来的HASH2和IOT设备发送的HASH1进行比对，以判定该IOT是否合法</p>
-</li>
+<li>clangd 提供clangd对vscode的支持</li>
+<li>Cmake 提供Cmake的基本高亮</li>
+<li>Cmake Tools(可选,这东西每次打开工程会自动执行cmake命令,我个人不喜欢)</li>
 </ol>
-<p>优势：</p>
-<ol>
-<li>不会泄露PUF指纹</li>
-<li>能够进行IOT设备的有效认证</li>
-</ol>
-<h3 id="其他的身份认证技术"><a href="#其他的身份认证技术" class="headerlink" title="其他的身份认证技术"></a>其他的身份认证技术</h3><ul>
-<li>阿里云和腾讯云的IOT身份认证：由云提供方提供设备ID,设备密钥对等身份信息，并<strong>烧录</strong>到IOT设备中。权限验证由云自身的认证中心提供，其流程与PUF类似，区别在于IOT设备内会存储相关的身份信息.</li>
-<li>…</li>
-</ul>
+<h3 id="新建工程"><a href="#新建工程" class="headerlink" title="新建工程"></a>新建工程</h3><p>到这里我们就能新建工程了，下面给出基本的文件：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-comment">//main.cpp</span><br><span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;iostream&gt;</span></span><br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">(<span class="hljs-type">int</span>, <span class="hljs-type">char</span>**)</span> </span>&#123;<br>    std::cout &lt;&lt; <span class="hljs-string">&quot;Hello, world!\n&quot;</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>注意这里的第三行<code>set(CMAKE_EXPORT_COMPILE_COMMANDS ON)</code>一定要写,这是clangd能正常补全的关键所在.</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cmake"><span class="hljs-keyword">cmake_minimum_required</span>(VERSION <span class="hljs-number">3.0</span>.<span class="hljs-number">0</span>)<br><span class="hljs-keyword">project</span>(demo VERSION <span class="hljs-number">0.1</span>.<span class="hljs-number">0</span>)<br><span class="hljs-keyword">set</span>(CMAKE_EXPORT_COMPILE_COMMANDS <span class="hljs-keyword">ON</span>)<br><span class="hljs-keyword">add_executable</span>(demo main.cpp)<br></code></pre></td></tr></table></figure>
+
+<p>好了,到目前为止我们就得到如下的工程:</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs stylus">.<br>├── CMakeLists<span class="hljs-selector-class">.txt</span><br>└── <span class="hljs-selector-tag">main</span>.cpp<br></code></pre></td></tr></table></figure>
+
+<p>这时候如果你装了<code>cmake tools</code>就不要用vscodium打开当前工程,因为它会自动根据默认规则执行cmake并生成相关cmake缓存,而不是用我们指定的规则.如果你已经打开了就请删除自动生成的Build目录.</p>
+<h3 id="执行Cmake"><a href="#执行Cmake" class="headerlink" title="执行Cmake"></a>执行Cmake</h3><p>这一步要单独拿出来说是因为有一些小细节需要注意.我们在windows下使用<code>Cmake .. -G Ninja</code>规则执行cmake时cmake会自动使用mingw编译器,而不是msvc,这里应该可以用命令强制使用msvc,但是我不会整,因此我的做法是打开<code>Developer Command Prompt for VS 2022</code>从这里进入我们项目的主目录,这时候因这个终端有环境变量,我们再新建build目录,然后执行<code>Cmake .. -G Ninja</code>,就能生成以msvc为后端的ninja + cmake工程了.</p>
+<h3 id="打开编辑器"><a href="#打开编辑器" class="headerlink" title="打开编辑器"></a>打开编辑器</h3><p>到这一步,我们终于能打开编辑器了,你会发现clabgd能正常补全MSVC编译器下的cmake项目了.</p>
 
                 
               </div>
@@ -335,8 +326,8 @@
 
   <div class="license-box my-3">
     <div class="license-title">
-      <div>P=NP?--算法复杂性和NP问题概述</div>
-      <div>http://example.com/2022/08/12/PUF简单介绍/</div>
+      <div>如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程</div>
+      <div>http://example.com/2022/09/25/如何让clangd在vscodium下支持使用MSVC的Cmake项目/</div>
     </div>
     <div class="license-meta">
       
@@ -348,7 +339,7 @@
       
         <div class="license-meta-item license-meta-date">
           <div>发布于</div>
-          <div>2022年8月12日</div>
+          <div>2022年9月25日</div>
         </div>
       
       
@@ -380,18 +371,12 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/2022/09/25/%E5%A6%82%E4%BD%95%E8%AE%A9clangd%E5%9C%A8vscodium%E4%B8%8B%E6%94%AF%E6%8C%81%E4%BD%BF%E7%94%A8MSVC%E7%9A%84Cmake%E9%A1%B9%E7%9B%AE/" title="如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">如何让clangd在vscodium下支持使用MSVC编译器的Cmake工程</span>
-                        <span class="visible-mobile">上一篇</span>
-                      </a>
-                    
                   </article>
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2022/07/20/LSFS--%E6%97%A5%E5%BF%97%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%8E%9F%E7%90%86%E4%BB%8B%E7%BB%8D/" title="LFS--日志文件系统介绍">
-                        <span class="hidden-mobile">LFS--日志文件系统介绍</span>
+                      <a href="/2022/08/12/PUF%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8D/" title="P=NP?--算法复杂性和NP问题概述">
+                        <span class="hidden-mobile">P=NP?--算法复杂性和NP问题概述</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
