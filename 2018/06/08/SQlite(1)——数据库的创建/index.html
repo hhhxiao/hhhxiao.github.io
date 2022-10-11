@@ -24,7 +24,7 @@
 <meta property="og:description" content="简介Android自带了SQLite数据库，这一篇主要讲SQlite数据库的创建以及自己的一些总结">
 <meta property="og:locale" content="zh_CN">
 <meta property="article:published_time" content="2018-06-07T16:00:00.000Z">
-<meta property="article:modified_time" content="2022-06-18T16:28:32.337Z">
+<meta property="article:modified_time" content="2022-10-04T14:25:56.120Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
@@ -297,15 +297,34 @@
 
 <h3 id="获取该类的实例以及创建数据库"><a href="#获取该类的实例以及创建数据库" class="headerlink" title="获取该类的实例以及创建数据库"></a>获取该类的实例以及创建数据库</h3><figure class="highlight reasonml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs reasonml"><span class="hljs-comment">//MainActivity的oncreate方法</span><br>protected void on<span class="hljs-constructor">Create(Bundle <span class="hljs-params">savedInstanceState</span>)</span> &#123;<br>       super.on<span class="hljs-constructor">Create(<span class="hljs-params">savedInstanceState</span>)</span>;<br>       set<span class="hljs-constructor">ContentView(R.<span class="hljs-params">layout</span>.<span class="hljs-params">activity_main</span>)</span>;<br>       <span class="hljs-comment">//获取MyDatabaseHelper的实例</span><br>       MyDatabaseHelper dbHelper = <span class="hljs-keyword">new</span> <span class="hljs-constructor">MyDatabaseHelper(<span class="hljs-params">this</span>,<span class="hljs-string">&quot;BookStore.db&quot;</span>,<span class="hljs-params">null</span>,1)</span>;<br>       Button button = find<span class="hljs-constructor">ViewById(R.<span class="hljs-params">id</span>.<span class="hljs-params">create_database</span>)</span>;<br>       <span class="hljs-comment">//执行getWritableDatabase()方法</span><br>       button.set<span class="hljs-constructor">OnClickListener(<span class="hljs-params">v</span>-&gt; <span class="hljs-params">dbHelper</span>.<span class="hljs-params">getWritableDatabase</span>()</span>);<br>&#125;<br><br></code></pre></td></tr></table></figure>
 <p>在执行getWritableDatabase()方法后数据库被创建，但是个没表的新库，会自动生成一个<code>android_metadata</code>的table,与此同时，MyDatabaseHelper类中的<code>onCreate()</code>方法被执行。<br>getWritableDatabase()的返回值是一个<strong>SQLiteDatabase</strong>对象，在第二次执行getWritableDatabase()方法时数据库不会再被创建，<code>onCreate()</code>也不会再次执行，此时可以利用<br><code>SQLiteDatabase db = dbHelper.getWritableDatabase()</code>来获取该数据库的实例，从而对数据库进行进一步操作(增删查改等)。</p>
-<pre><code class="hljs">
-</code></pre>
-
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs"><br></code></pre></td></tr></table></figure>
                 
               </div>
             
             <hr/>
             <div>
               <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" class="category-chain-item">数据库</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
   
   
 </div>
