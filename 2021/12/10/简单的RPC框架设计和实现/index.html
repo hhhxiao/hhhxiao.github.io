@@ -420,49 +420,6 @@
 
 
               
-  
-
-  <div class="license-box my-3">
-    <div class="license-title">
-      <div>简单的RPC框架设计和实现</div>
-      <div>http://example.com/2021/12/10/简单的RPC框架设计和实现/</div>
-    </div>
-    <div class="license-meta">
-      
-        <div class="license-meta-item">
-          <div>作者</div>
-          <div>John Doe</div>
-        </div>
-      
-      
-        <div class="license-meta-item license-meta-date">
-          <div>发布于</div>
-          <div>2021年12月10日</div>
-        </div>
-      
-      
-      
-        <div class="license-meta-item">
-          <div>许可协议</div>
-          <div>
-            
-              
-              
-                <a target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
-                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
-                    <i class="iconfont icon-by"></i>
-                  </span>
-                </a>
-              
-            
-          </div>
-        </div>
-      
-    </div>
-    <div class="license-icon iconfont"></div>
-  </div>
-
-
 
               
                 <div class="post-prevnext my-3">
@@ -534,6 +491,12 @@
 
 
   
+
+
+  
+  
+
+
 
 
 
@@ -727,6 +690,49 @@
 
 
   <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
 
   <script  src="/js/local-search.js" ></script>
 
