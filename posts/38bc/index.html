@@ -1,0 +1,715 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="翻译自 Blocking I&#x2F;O, Nonblocking I&#x2F;O, And Epoll (eklitzke.org)  在这篇文章中，我想解释下当你使用非阻塞的IO(NO blocking I&#x2F;O)的时候发生了什么，具体来说我会解释如下几点：  使用系统调用fcntl将文件描述符设置为O_NONBLOCK的语义 非阻塞I&#x2F;O和异步I&#x2F;O(asy">
+<meta property="og:type" content="article">
+<meta property="og:title" content="阻塞&#x2F;非阻塞I&#x2F;O以及Epoll">
+<meta property="og:url" content="http://example.com/posts/38bc/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="翻译自 Blocking I&#x2F;O, Nonblocking I&#x2F;O, And Epoll (eklitzke.org)  在这篇文章中，我想解释下当你使用非阻塞的IO(NO blocking I&#x2F;O)的时候发生了什么，具体来说我会解释如下几点：  使用系统调用fcntl将文件描述符设置为O_NONBLOCK的语义 非阻塞I&#x2F;O和异步I&#x2F;O(asy">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-05-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-10-17T15:02:04.424Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>阻塞/非阻塞I/O以及Epoll - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>XHY&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="阻塞/非阻塞I/O以及Epoll"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-05-30 00:00" pubdate>
+          2022年5月30日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5.5k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          46 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">阻塞/非阻塞I/O以及Epoll</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <blockquote>
+<p>翻译自 <a target="_blank" rel="noopener" href="https://eklitzke.org/blocking-io-nonblocking-io-and-epoll">Blocking I&#x2F;O, Nonblocking I&#x2F;O, And Epoll (eklitzke.org)</a></p>
+</blockquote>
+<p>在这篇文章中，我想解释下当你使用非阻塞的IO(NO blocking I&#x2F;O)的时候发生了什么，具体来说我会解释如下几点：</p>
+<ul>
+<li>使用系统调用<code>fcntl</code>将文件描述符设置为<code>O_NONBLOCK</code>的语义</li>
+<li>非阻塞I&#x2F;O和异步I&#x2F;O(asynchronous I&#x2F;O)的区别</li>
+<li>为什么非阻塞I&#x2F;O经常和I&#x2F;O复用一起使用，如<code>select</code>,<code>epoll</code>,和<code>kqueue</code></li>
+</ul>
+<h3 id="阻塞模式"><a href="#阻塞模式" class="headerlink" title="阻塞模式"></a>阻塞模式</h3><p>在默认情况下，Unix系统的文件描述符都位于阻塞模式(Blocking Mode)中，这意味着相关的I&#x2F;O调用如<code>read()</code>,<code>write()</code>或者<code>connect()</code>会产生阻塞。下面我举一个十分简单的模式来理解这一点，考虑以下场景：你想从一个常规的TTY程序(就是普通的没GUI的控制台程序)的标准输入流(stdin)中读数据，在这种场景下<code>read()</code>会一直阻塞直到有实际的数据达到（比如用户输入数据并按下回车以刷新缓冲区）。具体来说，内核会让当前进程处于睡眠状态直到stdin中有数据可读。这个行为对于其他的文件描述符也是成立的，举个例子，如果你试图从TCP socket中读取数据，那么read()函数会一直阻塞直到对面往这里发送的数据到达。</p>
+<p>阻塞的问题在于需要并发处理的场景下，因为被阻塞的进程会被挂起（这时候就无法利用CPU的资源只能一直等待，很影响并发性）。下面有两种方法以解决这个问题：</p>
+<ul>
+<li>非阻塞模式</li>
+<li>使用IO端口复用的系统调用，如<code>select</code>和<code>epoll</code></li>
+</ul>
+<p>这两种是独立的解决方案，但是它们经常被放到一起使用。接下来我们来看一下这两种方法的区别以及为什么它们一般被放到一起用。</p>
+<h3 id="非阻塞模式"><a href="#非阻塞模式" class="headerlink" title="非阻塞模式"></a>非阻塞模式</h3><p>可以通过<code>fcntl</code>函数来给文件描述符添加<code>O_NONBLOCK</code>以使其进入非阻塞模式(nonblocking mode)：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-comment">/* set O_NONBLOCK on fd */</span><br><span class="hljs-type">int</span> flags = <span class="hljs-built_in">fcntl</span>(fd, F_GETFL, <span class="hljs-number">0</span>);<br><span class="hljs-built_in">fcntl</span>(fd, F_SETFL, flags | O_NONBLOCK);<br></code></pre></td></tr></table></figure>
+
+<p>在设置为非阻塞模式后，**I&#x2F;O系统调用如<code>read</code>和<code>write</code>（在没有数据时）会返回-1，且会把<code>errno</code>设置为<code>EWOULDBLOCK</code>**。</p>
+<p>这样的方式虽然看起来有点意思，但是实际上没啥用。 仅使用这个原语没法有效地来对多个文件描述符进行 I&#x2F;O操作。例如，假设我们有两个文件描述符并且想要一次读取它们。我们可以这样实现：在一个循环中检查每个文件描述符是否有数据，如果没有就让进程睡眠一段时间然后再次进行检查：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-keyword">struct</span> <span class="hljs-title class_">timespec</span> sleep_interval&#123;.tv_sec = <span class="hljs-number">0</span>, .tv_nsec = <span class="hljs-number">1000</span>&#125;;<br><span class="hljs-type">ssize_t</span> nbytes;<br><span class="hljs-keyword">for</span> (;;) &#123;<br>    <span class="hljs-comment">/* 尝试从fd1中读数据*/</span><br>    <span class="hljs-keyword">if</span> ((nbytes = <span class="hljs-built_in">read</span>(fd1, buf, <span class="hljs-built_in">sizeof</span>(buf))) &lt; <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-comment">//没有数据</span><br>        <span class="hljs-keyword">if</span> (errno != EWOULDBLOCK) &#123;<span class="hljs-comment">//等于就说明没数据，不等于就说明炸了</span><br>            <span class="hljs-built_in">perror</span>(<span class="hljs-string">&quot;read/fd1&quot;</span>);<br>        &#125;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-comment">//有数据，开始处理</span><br>        <span class="hljs-built_in">handle_data</span>(buf, nbytes);<br>    &#125;<br><br>    <span class="hljs-comment">/* 尝试从fd2中读数据，同上*/</span><br>    <span class="hljs-keyword">if</span> ((nbytes = <span class="hljs-built_in">read</span>(fd2, buf, <span class="hljs-built_in">sizeof</span>(buf))) &lt; <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-keyword">if</span> (errno != EWOULDBLOCK) &#123;<br>            <span class="hljs-built_in">perror</span>(<span class="hljs-string">&quot;read/fd2&quot;</span>);<br>        &#125;<br>    &#125; <span class="hljs-keyword">else</span> &#123;<br>        <span class="hljs-built_in">handle_data</span>(buf, nbytes);<br>    &#125;<br>	<span class="hljs-comment">/*两个都没数据，睡一会儿再尝试*/</span><br>    <span class="hljs-built_in">nanosleep</span>(sleep_interval, <span class="hljs-literal">NULL</span>);<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这样的方法确实能用，但是有一堆缺点：</p>
+<ul>
+<li>当数据来的非常慢的时候，程序会被频繁唤醒，这样很浪费CPU资源</li>
+<li>如果数据来的时候程序正好在睡眠，那么数据需要等一会才能被读到，这样会造成读延迟</li>
+<li>代码编写繁琐，扩展性差</li>
+</ul>
+<p>为了解决这些问题，我们需要IO复用(I&#x2F;O multiplexer)</p>
+<h3 id="I-x2F-O复用-select-epoll-kqueue等"><a href="#I-x2F-O复用-select-epoll-kqueue等" class="headerlink" title="I&#x2F;O复用(select, epoll, kqueue等)"></a>I&#x2F;O复用(select, epoll, kqueue等)</h3><p>​	类Unix系统提供了几个I&#x2F;O复用的系统调用，如POSIX定义的<code>select</code>，Linux下的<a target="_blank" rel="noopener" href="http://man7.org/linux/man-pages/man7/epoll.7.html">Epoll</a>,BSD下的<a target="_blank" rel="noopener" href="https://www.freebsd.org/cgi/man.cgi?query=kqueue&sektion=2">kqueue</a>.这些I&#x2F;O复用机制都在相同的模式下工作：</p>
+<ol>
+<li><p>提供一个接口让内核知道当前程序感兴趣的一组文件描述符以及绑定在每种文件描述符上的I&#x2F;O事件(通常是读取事件和写入事件)</p>
+</li>
+<li><p>提供一个接口，当程序调用这个接口时会一直阻塞直到它感兴趣的I&#x2F;O事件发生，当IO事件发生后该接口能返回程序感兴趣的相关事件的相关数据(如类型，描述符等)</p>
+</li>
+</ol>
+<p>  举个例子,例如，你可以告诉内核你只对文件描述符 X 上的读取事件、文件描述符 Y 上的读取和写入事件以及文件描述符 Z 上的写入事件感兴趣。这些I&#x2F;O复用的接口并不关心文件描述符是处于阻塞模式还是非阻塞模式，处于阻塞模式的文件描述符在epoll或者select中照样能正常工作。如果**你只对 select 或 epoll 返回的文件描述符调用 <code>read() </code>和 <code>write()</code>，即使这些文件描述符处于阻塞模式，调用也不会阻塞(因为返回就意味着有数据)**。但是有一个例外，就是文件描述符的阻塞&#x2F;非阻塞状态对polling的触发模式来说十分重要，下面我会进一步解释。</p>
+<p>​	并发的多路复用方法就是我所说的异步IO(asynchronous I&#x2F;O)，有时候人们也管这叫非阻塞IO,我认为这是不懂系统编程级别非阻塞这个概念所导致的。我建议保留术语“非阻塞”来指代文件描述符是否实际上处于非阻塞模式。</p>
+<h3 id="O-NONBLOCK-如何与-I-x2F-O-多路复用交互"><a href="#O-NONBLOCK-如何与-I-x2F-O-多路复用交互" class="headerlink" title="O_NONBLOCK 如何与 I&#x2F;O 多路复用交互"></a>O_NONBLOCK 如何与 I&#x2F;O 多路复用交互</h3><p>假设我们正在使用带有阻塞文件描述符的 select 编写一个简单的套接字服务器。 为简单起见，在此示例中，我们只有要从中读取的文件描述符，它们位于 read_fds 中。 事件循环的核心部分将调用 select，然后为每个带有数据的文件描述符调用一次 read：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">ssize_t</span> nbytes;<br><span class="hljs-keyword">for</span> (;;) &#123;<br>    <span class="hljs-comment">/*阻塞直到感兴趣的文件描述符有数据*/</span><br>    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">select</span>(FD_SETSIZE, &amp;read_fds, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>) &lt; <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-built_in">perror</span>(<span class="hljs-string">&quot;select&quot;</span>);<br>        <span class="hljs-built_in">exit</span>(EXIT_FAILURE);<br>    &#125;<br>    <span class="hljs-comment">//数据到了</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; FD_SETSIZE; i++) &#123;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">FD_ISSET</span>(i, &amp;read_fds)) &#123;<br>            <span class="hljs-comment">/*检测到读事件发生*/</span><br>            <span class="hljs-keyword">if</span> ((nbytes = <span class="hljs-built_in">read</span>(i, buf, <span class="hljs-built_in">sizeof</span>(buf))) &gt;= <span class="hljs-number">0</span>) &#123;<br>                <span class="hljs-built_in">handle_read</span>(nbytes, buf);<br>            &#125; <span class="hljs-keyword">else</span> &#123;<br>            	<span class="hljs-comment">//阻塞模式下read返回值小于0说明read函数出错</span><br>                <span class="hljs-built_in">perror</span>(<span class="hljs-string">&quot;read&quot;</span>);<br>                <span class="hljs-built_in">exit</span>(EXIT_FAILURE);<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>​	这种方法不仅行得通而且还挺好的。 但是，如果 buf 很小，并且有大量的数据需要读，那么会发生什么呢？ 具体来说，假设 buf 是一个 1024 字节大小的缓冲区，但同时有 64KB 的数据需要读。 为了处理这个请求，我们会在调用 <code>select</code> 后接着调用<code>read()</code>64 次。，这总共会产生128个系统调用。</p>
+<p>​	如果缓冲区大小太小，则必须多次调用读取，这是无法避免的(read的调用次数&#x3D;数据量&#x2F;缓冲区大小)。 但或许我们可以减少调用 <code>select</code>的次数？ 在本例中的理想情况下，，我们想仅调用一次 select接口。</p>
+<p>​	事实上，我们可以通过将文件描述符置于非阻塞模式来实现这一想法。 基本思想是在循环中不断调用 read，直到它返回 EWOULDBLOCK。 就像下面的代码这样：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-type">ssize_t</span> nbytes;<br><span class="hljs-keyword">for</span> (;;) &#123;<br>    <span class="hljs-keyword">if</span> (<span class="hljs-built_in">select</span>(FD_SETSIZE, &amp;read_fds, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>, <span class="hljs-literal">NULL</span>) &lt; <span class="hljs-number">0</span>) &#123;<br>        <span class="hljs-built_in">perror</span>(<span class="hljs-string">&quot;select&quot;</span>);<br>        <span class="hljs-built_in">exit</span>(EXIT_FAILURE);<br>    &#125;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; FD_SETSIZE; i++) &#123;<br>        <span class="hljs-keyword">if</span> (<span class="hljs-built_in">FD_ISSET</span>(i, &amp;read_fds)) &#123;<br>            <span class="hljs-keyword">for</span> (;;) &#123;<span class="hljs-comment">//发现有数据直到读完位置</span><br>                nbytes = <span class="hljs-built_in">read</span>(i, buf, <span class="hljs-built_in">sizeof</span>(buf));<br>                <span class="hljs-keyword">if</span> (nbytes &gt;= <span class="hljs-number">0</span>) &#123;<br>                    <span class="hljs-built_in">handle_read</span>(nbytes, buf);<br>                &#125; <span class="hljs-keyword">else</span> &#123;<br>                    <span class="hljs-keyword">if</span> (errno != EWOULDBLOCK) &#123;<span class="hljs-comment">//读完了</span><br>                        <span class="hljs-built_in">perror</span>(<span class="hljs-string">&quot;read&quot;</span>);                        <span class="hljs-comment">//出现问题</span><br>                        <span class="hljs-built_in">exit</span>(EXIT_FAILURE);<br>                    &#125;<br>                    <span class="hljs-keyword">break</span>;<br>                &#125;<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>​	在这个例子中（1024 字节的缓冲区，有 64KB 的数据需要读取），我们将执行 66 次系统调用：一次select调用，64次没有错误的read调用以及一次返回数据已读完的read调用。这种方案下的总调用次数几乎是上一个示例的一半，能极大提高性能和可伸缩性。</p>
+<p>​	这种方法的缺点是由于循环的存在，至少会产生一次额外的读取，因为它会一直调用read直到返回 EWOULDBLOCK，如果缓冲区足够大，能够一次性将数据读完的话，这种方法会多产生一次read调用。</p>
+<h3 id="边缘触发模式下的Polling"><a href="#边缘触发模式下的Polling" class="headerlink" title="边缘触发模式下的Polling"></a>边缘触发模式下的Polling</h3><p>​	非阻塞 I&#x2F;O 还有一个更重要的用途：配合Epoll中的ET(edge-trigged，边沿触发)模式。 Epoll有两种模式：电平触发(Level-trigged,LT)和边沿触发两种模式。 LT模式是一种更简单的编程模型，类似于经典的 select 系统调用。 为了解释LT和ET的差异，我们需要了解 epoll 在内核中是如何工作的。</p>
+<p>​	假设你告诉内核你要使用 epoll 来监视你感兴趣的文件描述符上的I&#x2F;O事件, 内核就会为每个文件描述符维护这些感兴趣的I&#x2F;O事件列表。 当数据进入文件描述符(即相关的I&#x2F;O事件发生)时，内核遍历该列表并使用事件列表中的文件描述符唤醒每个在 <code>epoll_wait</code> 中阻塞的进程。</p>
+<p>​	无论 epoll 处于何种触发模式，我上面概述的情况都会发生。LT模式和ET模式之间的区别在于程序调用<code>epoll_wait </code>时内核中发生的情况不同。 在LT模式下，内核将遍历兴趣列表中的每个文件描述符，以查看它是否已经匹配兴趣条件。 例如，如果你在文件描述符 8 上注册了一个读取事件，当调用 <code>epoll_wait</code>时，内核将首先检查文件描述符 8 上否已经有数据，只要有数据那么 <code>epoll_wait </code>就会返回而不会阻塞。</p>
+<p>​	相比之下，在边ET发模式下，内核会跳过此检查，并在程序调用<code>epoll_wait</code>时立即使进程进入睡眠状态。 这把所有的责任都交给了你，程序员，做正确的事情，并在等待之前完全读取和写入每个文件描述符的所有数据。</p>
+<p>这种边缘触发模式使 epoll 成为 O(1)级别的 I&#x2F;O 多路复用器：程序在调用epoll_wait后调会立即被挂起，当新数据进入内核时，内核会在 O(1) 时间内唤醒那个进程。</p>
+<blockquote>
+<p>个人理解：</p>
+<p>LT模式下，程序调用<code>epoll_wait</code>就相当于询问内核自己关心的I&#x2F;O事件是否有数据，这个询问会一直阻塞到自己关心的I&#x2F;O事件到来（如果没有数据会阻塞）</p>
+<p>ET模式下, 程序调用<code>epoll_wait</code>后就就会被内核挂起，当有IO事件发生后内核会主动唤醒该进程</p>
+</blockquote>
+<h3 id="个人理解"><a href="#个人理解" class="headerlink" title="个人理解"></a>个人理解</h3><p>LT模式就是只要当前缓冲区状态下有数据就会触发内核的epoll_wait，类似数字逻辑中的高电平触发，ET模式是有新数据到来的时候才会触发内核事件，类似数字逻辑中的的始终上升沿触发。</p>
+<p>有一个更有效的例子来说明ET和LT触发模式之间的区别。假设你的读取缓冲区是 100 字节，并且该文件描述符有 200 字节的数据进入。</p>
+<p>在LT模式下你首先调用<code>epoll_wait</code>，进程会一直阻塞到有数据再返回，然后你读了100byte，接着你会再次调用<code>epoll_wait</code>,内核会发现还有100byte,然后该调用再次返回，你又读了100byte，读完后你继续调用<code>epoll_wait</code>,然后进程又开始阻塞，直到有新的数据。</p>
+<p>​	在ET模式下，内核会让你立即进入睡眠状态。当有200byte到来后，内核会马上唤醒你，叫你读数据。不管你有没有读完，因为没有新的数据到了，内核也不会再通知你，所以<strong>你就必须在内核通知的那一次内读完所有数据.<strong>由于</strong>阻塞模式下的IO无法判定数据有没有读完，且如果read()在阻塞的时候有新的数据来到,那么当前进程就会错过内核的这次有数据的通知</strong>,然后整个IO程序就死锁了,因ET模式需要配合非阻塞模式。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B/" class="category-chain-item">系统编程</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/posts/2334/" title="史诗级退化——全新的博客系统">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">史诗级退化——全新的博客系统</span>
+                        <span class="visible-mobile">上一篇</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/3fbd/" title="C语言的运行时">
+                        <span class="hidden-mobile">C语言的运行时</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
