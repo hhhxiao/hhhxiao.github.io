@@ -1,0 +1,718 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="John Doe">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="最近在复习一些操作系统相关的知识,而操作系统说白了就是为程序运行提供的环境的,和硬件直接接触的软件.现代操作系统要为程序提供一种虚拟环境,包括但不限于一个独立的地址空间,一个独立的虚拟CPU以及其他一些东西(如系统调用等).今天正好借这个机会来梳理一下程序的运行环境(主要是内存模型).  下面的所有例子都已C语言为例,但是请注意,这只是一种较为场景的实现,而不是C语言标准的一部分  程序运行的内存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ELF格式与程序运行的内存模型">
+<meta property="og:url" content="http://example.com/2022/10/17/ELF%E6%A0%BC%E5%BC%8F%E4%B8%8E%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C%E7%9A%84%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="最近在复习一些操作系统相关的知识,而操作系统说白了就是为程序运行提供的环境的,和硬件直接接触的软件.现代操作系统要为程序提供一种虚拟环境,包括但不限于一个独立的地址空间,一个独立的虚拟CPU以及其他一些东西(如系统调用等).今天正好借这个机会来梳理一下程序的运行环境(主要是内存模型).  下面的所有例子都已C语言为例,但是请注意,这只是一种较为场景的实现,而不是C语言标准的一部分  程序运行的内存">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-10-16T16:11:59.000Z">
+<meta property="article:modified_time" content="2022-10-17T09:04:52.480Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary_large_image">
+  
+  
+  
+  <title>ELF格式与程序运行的内存模型 - Hexo</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>XHY&#39;s Blog</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                首页
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                归档
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                分类
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                标签
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                关于
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                友链
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="ELF格式与程序运行的内存模型"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2022-10-17 00:11" pubdate>
+          2022年10月17日 凌晨
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          4.1k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          35 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">ELF格式与程序运行的内存模型</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>最近在复习一些操作系统相关的知识,而操作系统说白了就是为程序运行提供的环境的,和硬件直接接触的软件.现代操作系统要为程序提供一种虚拟环境,包括但不限于一个独立的地址空间,一个独立的虚拟CPU以及其他一些东西(如系统调用等).今天正好借这个机会来梳理一下程序的运行环境(主要是内存模型).</p>
+<blockquote>
+<p>下面的所有例子都已C语言为例,但是请注意,这只是一种较为场景的实现,而<strong>不是C语言标准的一部分</strong></p>
+</blockquote>
+<h2 id="程序运行的内存模型"><a href="#程序运行的内存模型" class="headerlink" title="程序运行的内存模型"></a>程序运行的内存模型</h2><h4 id="静态内存和动态内存"><a href="#静态内存和动态内存" class="headerlink" title="静态内存和动态内存"></a>静态内存和动态内存</h4><p>我们先从最简单的C语言程序开始,这个程序甚至没有main函数:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">void</span> <span class="hljs-title function_">foo</span><span class="hljs-params">()</span>&#123;<br>	<span class="hljs-type">int</span> a = <span class="hljs-number">1</span>;<br>	<span class="hljs-type">int</span> b = a;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里我们仅从内存的角度来考虑问题(即不考虑编译器的寄存器优化的影响),这段代码在内存中的运行时可能是下面这样的:</p>
+<figure class="highlight livecodeserver"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs livecodeserver">┌──────────┐<br>│<span class="hljs-keyword">a</span> (<span class="hljs-number">4</span><span class="hljs-keyword">bytes</span>)│<br>├──────────┤<br>│b (<span class="hljs-number">4</span><span class="hljs-keyword">bytes</span>)│<br>└──────────┘<br></code></pre></td></tr></table></figure>
+
+<p>然后我们再稍微来点更复杂的例子:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c">strcut A&#123;<br> <span class="hljs-type">int</span> x;<br> <span class="hljs-type">char</span> c;<br>&#125;<br><span class="hljs-type">void</span> <span class="hljs-title function_">f</span><span class="hljs-params">()</span>&#123;<br>  <span class="hljs-class"><span class="hljs-keyword">struct</span> <span class="hljs-title">A</span> <span class="hljs-title">x</span>[3];</span><br>  x[<span class="hljs-number">0</span>].x = <span class="hljs-number">12</span>;<br>  x[<span class="hljs-number">1</span>].c = <span class="hljs-string">&#x27;c&#x27;</span><br>  <span class="hljs-keyword">struct</span> A* p = x + <span class="hljs-number">1</span>;  <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>它在内存中的分布可能是这样的:</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs scss">┌─────────────┐<br>│x<span class="hljs-selector-attr">[0]</span> (<span class="hljs-number">8</span>bytes)│<br>├─────────────┤<br>│x<span class="hljs-selector-attr">[1]</span> (<span class="hljs-number">8</span>bytes)│<br>├─────────────┤<br>│x<span class="hljs-selector-attr">[2]</span> (<span class="hljs-number">8</span>bytes)│<br>├─────────────┤<br>│<span class="hljs-selector-tag">p</span>    (<span class="hljs-number">8</span>bytes)│<br>└─────────────┘<br></code></pre></td></tr></table></figure>
+
+<p>不难发现一点,在上述的示例代码中,程序占用的内存空间是<strong>编译期</strong>可以算出来的,如第一个例子<code>a</code>和<code>b</code>变量就占据了固定的8bytes,而第一个例子一个数组+3个指针一共占据了24bytes.到此为止,我们不难想到,<strong>为了节省运行时的开销,如果我们让编译器在编译的时候就计算出来程序的内存布局(也就是怎么排布,占多少个字节).</strong></p>
+<p>但遗憾的是,不是所有场景下我们都编译期间知道内存大小,再来看个例子:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">foo</span><span class="hljs-params">()</span></span>&#123;<br>	<span class="hljs-type">int</span> x;<br>	<span class="hljs-built_in">scanf</span>(<span class="hljs-string">&quot;%d&quot;</span>,&amp;x);<br>	<span class="hljs-type">int</span> *y = <span class="hljs-built_in">malloc</span>(x * <span class="hljs-built_in">sizeof</span>(<span class="hljs-type">int</span>));<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>如果继续使用我们上面的模型,那么它们在内存中的分布可能是这样的(让我们暂时忽略函数调用):</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs scss">┌──────────────────────────┐<br>│x        (<span class="hljs-number">4</span>bytes)         │<br>├──────────────────────────┤<br>│y<span class="hljs-selector-attr">[0]</span>     (<span class="hljs-number">4</span>bytes)         │<br>├──────────────────────────┤<br>│y<span class="hljs-selector-attr">[1]</span>     (<span class="hljs-number">4</span>bytes)         │<br>├──────────────────────────┤<br>│...      (<span class="hljs-number">4</span> * (x-<span class="hljs-number">3</span>) bytes)│<br>├──────────────────────────┤<br>│y<span class="hljs-selector-attr">[x-1]</span>   (<span class="hljs-number">4</span>bytes)         │<br>└──────────────────────────┘<br></code></pre></td></tr></table></figure>
+
+<p>上面这个例子就要占用<code>4 + x * 4</code>字节的空间,而且这个空间无法在编译期计算得出,因为<code>x</code>只有等到用户输入才知道,因此也就不能使用上述的编译期间计算的模型了.为了解决这个问题,现在普遍采用的是<strong>静态+动态两种方法同时使用的内存分配方案:</strong></p>
+<ol>
+<li>对于程序执行流中编译期能计算出来的大小,我们就直接在编译期分配好(也就是告诉操作系统需要多少内存),暂时称这算为静态内存区域</li>
+<li>对于只有运行时才能算出来的大小,就使用一个额外的动态内存区域在运行时分配内存,而静态内存区域只需要存储指向这段内存的一个指针即可(<strong>请注意指针是能编译期算出来的</strong>)</li>
+</ol>
+<p>上面的说法有点抽象,还是以上面的代码举个例子,在使用静态+动态内存分配后,我们就可以使用如下的内存模型:</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs scss">                    		┌──────────────────────────┐<br>┌─────────────────┐         │y<span class="hljs-selector-attr">[0]</span>     (<span class="hljs-number">4</span>bytes)         │<br>│x        (<span class="hljs-number">4</span>bytes)│			├──────────────────────────┤<br>├─────────────────┤			│y<span class="hljs-selector-attr">[1]</span>     (<span class="hljs-number">4</span>bytes)         │<br>│y*       (<span class="hljs-number">8</span>bytes)│────────&gt;├──────────────────────────┤<br>└─────────────────┘         │...      (<span class="hljs-number">4</span> * (x-<span class="hljs-number">3</span>) bytes)│          <br>     静态内存区域        		├──────────────────────────┤<br>                   			│y<span class="hljs-selector-attr">[x-1]</span>   (<span class="hljs-number">4</span>bytes)         │<br>                    		└──────────────────────────┘<br>                    				动态内存区域<br></code></pre></td></tr></table></figure>
+
+<p>接下来来介绍所谓的<strong>静态内存区域</strong>和<strong>动态内存区域</strong>到底是怎样的.</p>
+<h3 id="静态内存区域与栈"><a href="#静态内存区域与栈" class="headerlink" title="静态内存区域与栈"></a>静态内存区域与栈</h3><p>上述说的静态内存区域其实就是程序的<strong>运行栈</strong>至于为什么要叫栈,这就是程序的执行特征来决定的了:<strong>程序在运行的时候有大量的函数调用行为,而栈是用来描述这一行为最合适的数据结构</strong>:</p>
+<p>下面有一个简单的例子:</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs csharp"><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">a</span>()</span>&#123;<br>	<span class="hljs-built_in">int</span> x = <span class="hljs-number">0</span>;<br>	b();<br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">b</span> ()</span>&#123;<br> 	<span class="hljs-built_in">int</span> y = <span class="hljs-number">0</span>;<br>	c();<br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">void</span> <span class="hljs-title">c</span>()</span>&#123;<br>	<span class="hljs-built_in">int</span> z = <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这里我们运行<code>a()</code>,当函数调用链到达d的时候,栈空间的排布是如下这样的:</p>
+<figure class="highlight lasso"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs lasso">┌────────────┐&lt;- <span class="hljs-built_in">stack</span> top<br>│a 的调用上下文│<br>├────────────┤<br>│x  (<span class="hljs-number">4</span> <span class="hljs-built_in">bytes</span>)│<br>├────────────┤<br>│b 的调用上下文│<br>├────────────┤<br>│y  (<span class="hljs-number">4</span><span class="hljs-built_in">bytes</span>) │<br>├────────────┤<br>│c 的调用上下文│<br>├────────────┤<br>│u (<span class="hljs-number">4</span><span class="hljs-built_in">bytes</span>)  │<br>│		     │&lt;- <span class="hljs-built_in">stack</span> pointer<br></code></pre></td></tr></table></figure>
+
+<p>每当有一个函数被调用的时候,编译器就将该函数的调用上下文(包括传入的参数,返回值,栈指针等信息)入栈(往下移动栈指针),然后开始分配该函数所需要的经验静态内存空间;每当一个函数返回的时候, 编译器就将当前栈分配的静态内存空间和调用上下文等信息回收(往上移动栈指针即可),这样就形成了完整的函数但用过程. 这里将函数的调用上下文和其分配的静态内存空间称之为<strong>栈帧</strong>,上述过程也可以简化成这样:</p>
+<ol>
+<li>函数调用就是往栈中推入栈帧</li>
+<li>函数的返回就是往栈中回收栈帧</li>
+</ol>
+<p>至于调用上下文,它会存储部分调用函数传递给当前函数的参数(还有部分参数直接写在寄存器中,不经过栈内存,具体看相关ABI),当前的栈指针,预分配的返回值等信息.</p>
+<h3 id="动态内存区域与堆"><a href="#动态内存区域与堆" class="headerlink" title="动态内存区域与堆"></a>动态内存区域与堆</h3><p>动态内存区域就是由操作系统管理的一块空闲的内存空间,当一个用户(进程)需要的时候,可以通过特定的系统调用(如经C语言封装的<code>malloc</code>)来分配一块指定大小的内存,并返回指向该内存的指针作为句柄.这段内存被申请后,就无法被其他的用户使用了,直到该用户手动告诉操作系统这段内存自己不需要了(表现在C语言内就是<code>free</code>函数).我们管这段内存叫做<strong>堆</strong>并不是说它用了堆数据结构,而是这就是一个约定俗成的叫法,没啥理由..</p>
+<p>如何实现一个堆内存分配器也是需要研究的地方,由于不是本篇的主题,这里就不细讲了.</p>
+<p>说到这里你也就明白了如下的问题:</p>
+<ol>
+<li><p>为什么不能在函数中返回静态数组,而需要动态内存分配</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> * <span class="hljs-title function_">get_array</span><span class="hljs-params">()</span>&#123;<br>	<span class="hljs-type">int</span> <span class="hljs-built_in">array</span>[<span class="hljs-number">3</span>];<br>	<span class="hljs-keyword">return</span> <span class="hljs-built_in">array</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>这是因为<code>get_array</code>返回后<code>array</code>所在的栈帧就被回收了,而如果你使用动态内存分配,实际的数组其实在动态内存区域中,不会被栈帧的回收所影响.</p>
+</li>
+<li><p>为什么C++不支持VLA(变成数组,C语言支持),所谓的<code>VLA</code>就是栈内数组的长度只有在运行时才能确定,如:</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">val_test</span><span class="hljs-params">()</span></span>&#123;<br>	<span class="hljs-type">int</span> a;<br>	<span class="hljs-built_in">scanf</span>(<span class="hljs-string">&quot;%d&quot;</span>,&amp;a);<br>	<span class="hljs-type">int</span> arr[a];<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>很明显,这违背了我们讲的上述内存分配模型:运行时才能确定的内存大小应该在分配在堆中,而不能在栈中.</p>
+</li>
+</ol>
+<h3 id="其他的内存模型"><a href="#其他的内存模型" class="headerlink" title="其他的内存模型"></a>其他的内存模型</h3><h4 id="静态数据区域"><a href="#静态数据区域" class="headerlink" title="静态数据区域"></a>静态数据区域</h4><p>你可能会注意到，并不是所有的变量都是声明在函数内的，如果直接将这样的变量分配到栈中，那么该分到栈的哪个地方呢，答案是哪都不去，编译器会这种类型的数据专门开几个分区如</p>
+<ol>
+<li><code>bss</code>用来存储未初始化的全局变量</li>
+<li><code>data</code>和<code>rodata</code>分别用存储可读写以及只读的已初始化的全局变量</li>
+</ol>
+<h3 id="字符串字面量"><a href="#字符串字面量" class="headerlink" title="字符串字面量"></a>字符串字面量</h3><p>如果你是C语言新手，看到这段代码你可能会迷惑:为什下面这算代码中的<code>str</code>在函数执行完成后不会析构，这是因为在C语言中字符串字面量的内容(在本例中代指<code>Hello world</code>这几个字符 )自身不会存在栈中，而是可能放在<code>.rodata</code>中(具体在哪视编译器而定)。只有指向它的占8bytes的指针<code>str</code>会被放在栈中，因此这段代码是能够正常运行的。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">const</span> <span class="hljs-type">char</span>* <span class="hljs-title function_">get_str</span><span class="hljs-params">()</span>&#123;<br>	<span class="hljs-type">const</span> <span class="hljs-type">char</span>* str = <span class="hljs-string">&quot;Hello world&quot;</span><br>    <span class="hljs-keyword">return</span> str;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h3 id="完整的内存模型"><a href="#完整的内存模型" class="headerlink" title="完整的内存模型"></a>完整的内存模型</h3><p>说了这么多后，我们可以介绍一个完整的程序运行的内存模型了，<strong>无论如何请注意:该模型并不是C语言标准的一部分，而是一种较为常见的实现</strong></p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><code class="hljs stylus">┌────────────────────┐<br>│stack frame <span class="hljs-selector-tag">main</span>    │<br>├────────────────────┤<br>│stack frame  <span class="hljs-number">1</span>      │<br>├────────────────────┤<br>│stack frame  <span class="hljs-number">2</span>      │<br>├────────────────────┤<br>│...                 │<br>├────────────────────┤<br>│                    │<br>├────────────────────┤<br>│<span class="hljs-built_in">heap</span>(dynamic memory)│<br>├────────────────────┤<br>│<span class="hljs-selector-class">.bss</span>                │<br>├────────────────────┤<br>│<span class="hljs-selector-class">.data</span>               │<br>├────────────────────┤<br>│<span class="hljs-selector-class">.rodata</span>             │<br>├────────────────────┤<br>│<span class="hljs-selector-class">.text</span>               │<br>└────────────────────┘<br></code></pre></td></tr></table></figure>
+
+<p>这之中只有<code>.text</code>没有提过，其实<code>.text</code>就是存储编译器指令代码的地方，程序运行就是程序计数器<code>PC</code>在这部分内存中跑来跑去。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" class="category-chain-item">操作系统</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2022/10/04/%E7%AE%80%E5%8D%95%E4%BB%8B%E7%BB%8DCxx%E4%B8%AD%E7%9A%84Promise%E5%92%8CFuture/" title="简单介绍C++中的Promise和Future">
+                        <span class="hidden-mobile">简单介绍C++中的Promise和Future</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
