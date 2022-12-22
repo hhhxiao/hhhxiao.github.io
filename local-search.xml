@@ -4,6 +4,19 @@
   
   
   <entry>
+    <title>数据库事务简介</title>
+    <link href="/posts/797a/"/>
+    <url>/posts/797a/</url>
+    
+    <content type="html"><![CDATA[<blockquote><p>注意,本篇博客的事务一般代指数据库事务,本篇博客中所讲的内容不属于任何数据库的实现,只是部分理论的介绍.</p></blockquote><h2 id="事务的产生与概念"><a href="#事务的产生与概念" class="headerlink" title="事务的产生与概念"></a>事务的产生与概念</h2><p>作为构建在文件系统上层的一种广泛使用的数据管理软件,数据库可靠性一直是其设计的重点之一. 在为引入事务这一概念之前,数据库在处理这一类问题的时候总是显得十分复杂和冗杂,因为开发者需要考虑各种客样的突发情况,如:</p><ul><li>数据刚到达内存还没写入磁盘就断电</li><li>多个客户端同时读写数据库导致的数据不一致问题等等</li></ul><p>等等问题困扰着数据库的正常使用和发展.</p><p>为了解决这些广泛出现的各种疑难杂症,人们提出了数据库事务的概念,事务使用四个约束从根本上解决了上述问题,这四个约束也是常见的ACID:</p><ol><li>原子性: 事务内的操作要么全部执行,提交,要么彻底撤销,不对数据库状态产生任何影响,不会产生任何中间状态</li><li>一致性, 说简单就是事务内的操作全部提交后不能产生任何逻辑错误,数据的完整性不会被破坏,比如转账过程中因为读脏数据等等问题导致金额出现缺失等</li><li>隔离性,  并发执行的各个事务之前应该互不干扰, 不能出现逻辑错误等等</li><li>持久性, 事务提交即落盘, 此时中途断电也不会产生数据丢失.</li></ol><p>原子性和持久性是通过LOG机制来实现的,而隔离性是通过读写锁来实现的. 此外,我们可以认为前面三者达到了,那么蜀山是一致性就达到了,不再需要额外的手段来保证一致性.</p><h2 id="持久性和原子性保证的关键-–-LOG"><a href="#持久性和原子性保证的关键-–-LOG" class="headerlink" title="持久性和原子性保证的关键 – LOG"></a>持久性和原子性保证的关键 – LOG</h2><p>首先我们要明确, 一般来说,一个事务由多读写操作组成(只有一个的话就没有原子性的概念了),在这个基础上,LOG的基本思想是<strong>要做到所有操作都要可撤销和重做</strong>,这样可以做到<strong>当一个事务执行一半出现意外的时候方便继续以及回退</strong>.</p><p>借用这个方法,我们可以得出日志机制的基本框架和流程:</p><ol><li>一个事务的所有读写操作全部事先写入LOG中,而不是直接更新数据库,LOG是及时持久化的</li><li>只有当事务的所有操作全部完成(即提交后)后,才根据LOG中的内容将所有的操作更新到数据库自身中.</li><li>数据库可以根据LOG从初始状S0转换到事务T执行后的状态S1,也能从提交后的状态S1根据LOG恢复到S0</li></ol><p>这样做就能解决有原子性和持久性的问题:</p><ol><li>如果事务更新一半突然断电,因为此时事务还未提交,因此没有实际更新数据库,因此这种情况和事务未执行等价</li><li>如果事务执行一半就撤销,回退日志即可,不需要修改数据库本身,原理同上</li><li>如果事务刚提交,数据库还未更新数据就突然断电,可以从磁盘中读取LOG并进行恢复</li></ol><p>接下来还剩下的问题就是:</p><ol><li><p>为什么要让日志及时持久化,而不是让数据库及时持久化?</p><p>事务的日志总是少量的,其读写规模相比数据库自身来说,无论是从随机读写,还是读写的吞吐量来说,都是及时持久化日志更有优势</p></li><li><p>日志是什么结构的?</p><p>日志记录了十五内的每条操作的时间戳,读写的变量,新值以及旧值以便更新,一种日志的格式如下所示:</p><figure class="highlight subunit"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs subunit">NAME OF TRANSACTION:<br>PREVIOUS LOG RECORD OF THIS TRANSACTION:<br>NEXT LOG RECORD OF THIS TRANSACATION:<br><span class="hljs-keyword">TIME:</span><br>TYPE OF OPERATION:<br>OBJECT OF OPERATION:<br>OLD VALUE:<br>NEW VALUE:<br></code></pre></td></tr></table></figure><p>当然日志的实现千差万别，一般把从S0到S1的日志叫redo日志，把从S1回退到S0的日志叫undo log</p></li></ol><p>下图展示了上述思路的流程:</p><img src="https://tva2.sinaimg.cn/large/007bwgzIgy1h9cqimyikyj30z90msn0s.jpg" style="zoom:67%;" /><h2 id="如何保证隔离性保证-–-读写锁"><a href="#如何保证隔离性保证-–-读写锁" class="headerlink" title="如何保证隔离性保证 – 读写锁"></a>如何保证隔离性保证 – 读写锁</h2><p>见下一篇。</p><h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><ul><li><a href="https://dl.acm.org/doi/abs/10.5555/48751.48761">https://dl.acm.org/doi/abs/10.5555/48751.48761</a></li></ul>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>ELF格式与程序运行的内存模型</title>
     <link href="/posts/9cee/"/>
     <url>/posts/9cee/</url>
@@ -135,25 +148,6 @@
     <categories>
       
       <category>系统编程</category>
-      
-    </categories>
-    
-    
-  </entry>
-  
-  
-  
-  <entry>
-    <title>C语言的运行时</title>
-    <link href="/posts/3fbd/"/>
-    <url>/posts/3fbd/</url>
-    
-    <content type="html"><![CDATA[]]></content>
-    
-    
-    <categories>
-      
-      <category>C++</category>
       
     </categories>
     
