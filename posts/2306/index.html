@@ -16,21 +16,21 @@
   <meta name="author" content="John Doe">
   <meta name="keywords" content="">
   
-    <meta name="description" content="小记——博客开篇这是博客的第一篇文章，工科生文笔着实不好。望见谅。这个小博客仅供自己记录和学习使用，故没有增加评论和阅读次数统计功能。你若看见了便是缘分，能从中学习知识甚至找到共鸣便是我的荣幸。">
+    <meta name="description" content="C++的模板在进行参数转发时有一些奇怪的现象，所见并非所得，先来看下面的代码： 123456789101112131415161718template&lt;typename T&gt;void reference(T &amp;v) &amp;#123;    printf(&quot;L value\n&quot;);&amp;#125;template&lt;typename T&gt;void refer">
 <meta property="og:type" content="article">
-<meta property="og:title" content="小记">
-<meta property="og:url" content="http://example.com/posts/db80/index.html">
+<meta property="og:title" content="C++的引用坍缩和完美转发">
+<meta property="og:url" content="http://example.com/posts/2306/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:description" content="小记——博客开篇这是博客的第一篇文章，工科生文笔着实不好。望见谅。这个小博客仅供自己记录和学习使用，故没有增加评论和阅读次数统计功能。你若看见了便是缘分，能从中学习知识甚至找到共鸣便是我的荣幸。">
+<meta property="og:description" content="C++的模板在进行参数转发时有一些奇怪的现象，所见并非所得，先来看下面的代码： 123456789101112131415161718template&lt;typename T&gt;void reference(T &amp;v) &amp;#123;    printf(&quot;L value\n&quot;);&amp;#125;template&lt;typename T&gt;void refer">
 <meta property="og:locale" content="zh_CN">
-<meta property="article:published_time" content="2018-04-25T16:00:00.000Z">
-<meta property="article:modified_time" content="2022-10-17T15:02:04.409Z">
+<meta property="article:published_time" content="2023-02-03T09:23:17.000Z">
+<meta property="article:modified_time" content="2023-02-23T13:22:37.414Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <title>小记 - Hexo</title>
+  <title>C++的引用坍缩和完美转发 - Hexo</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -207,7 +207,7 @@
       <div class="banner-text text-center fade-in-up">
         <div class="h2">
           
-            <span id="subtitle" data-typed-text="小记"></span>
+            <span id="subtitle" data-typed-text="C++的引用坍缩和完美转发"></span>
           
         </div>
 
@@ -218,8 +218,8 @@
     
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2018-04-26 00:00" pubdate>
-          2018年4月26日 凌晨
+        <time datetime="2023-02-03 17:23" pubdate>
+          2023年2月3日 下午
         </time>
       </span>
     
@@ -230,7 +230,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          571 字
+          378 字
         
       </span>
     
@@ -241,7 +241,7 @@
         
         
         
-          5 分钟
+          4 分钟
         
       </span>
     
@@ -279,17 +279,15 @@
         <div id="board">
           <article class="post-content mx-auto">
             <!-- SEO header -->
-            <h1 style="display: none">小记</h1>
+            <h1 style="display: none">C++的引用坍缩和完美转发</h1>
             
             
               <div class="markdown-body">
                 
-                <h2 id="小记——博客开篇"><a href="#小记——博客开篇" class="headerlink" title="小记——博客开篇"></a>小记——博客开篇</h2><p>这是博客的第一篇文章，工科生文笔着实不好。望见谅。<br>这个小博客仅供自己记录和学习使用，故没有增加评论和阅读次数统计功能。你若看见了便是缘分，能从中学习知识甚至找到共鸣便是我的荣幸。</p>
-<span id="more"></span>
+                <p>C++的模板在进行参数转发时有一些奇怪的现象，所见并非所得，先来看下面的代码：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> T&gt;</span><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">reference</span><span class="hljs-params">(T &amp;v)</span> </span>&#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;L value\n&quot;</span>);<br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> T&gt;</span><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">reference</span><span class="hljs-params">(T &amp;&amp;v)</span> </span>&#123;<br>    <span class="hljs-built_in">printf</span>(<span class="hljs-string">&quot;R value\n&quot;</span>);<br>&#125;<br><span class="hljs-function"><span class="hljs-keyword">template</span>&lt;<span class="hljs-keyword">typename</span> T&gt;</span><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">fun</span><span class="hljs-params">(T &amp;&amp;x)</span> </span>&#123;<br>    <span class="hljs-built_in">reference</span>(x);<br>&#125;<br><span class="hljs-function"><span class="hljs-type">int</span> <span class="hljs-title">main</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-built_in">fun</span>(<span class="hljs-number">1</span>);<br>    <span class="hljs-type">int</span> x = <span class="hljs-number">1</span>;<br>    <span class="hljs-built_in">fun</span>(x);<br>    <span class="hljs-keyword">return</span> <span class="hljs-number">0</span>;<br>&#125;<br></code></pre></td></tr></table></figure>
 
-<p>我是机械设计制造及自动化专业的学生，在写这篇文章的时候也是我得知自己转专业失败的时候，内心比较复杂，但因为此也正好有话可说。</p>
-<p>我热衷于计算机，建立这个小博客也是自己计算机之路的一个小步骤，当然转去计算机也是。当我一块砖一块砖堆砌自己的梦想的时候，最重要的一块我却未能成功搬起来，反而被它砸到了脚。在刚刚得知这个消息的时候，我的内心是崩溃的，因为我回忆自己的面试以及考试是多么顺利，然而最后结果是<strong>我没有过</strong>。我无法理解，自己到底做错了什么，内心一度郁闷。<br>  我比其他人投入的多太多，但失败时我最终没有发泄出来，我没有当愤青去抱怨这个世界的不公，而是选择平静地接受了这个事实，在旁人问起“你这么喜欢计算机为什么没有过啊？”的时候，我无法回答，只能陈述事实，没有过就是没过。不过我只能在机械这条路上走下去，从另外一个角度去探寻真理，去追寻深处所谓的“梦想”吗?</p>
-<p>现实总是如此残酷，我也只能默默地忍受这一事实，失败就是失败，无法狡辩。然而可怕的不是失败，而是缺少面对失败的勇气。因此，在屋漏偏逢连夜雨的时候，我还是要把博客更新下去，计算机这条路也不会因此停下，共勉。</p>
+<p>其中上面两行用于检测</p>
 
                 
               </div>
@@ -297,27 +295,6 @@
             <hr/>
             <div>
               <div class="post-metas my-3">
-  
-    <div class="post-meta mr-3 d-flex align-items-center">
-      <i class="iconfont icon-category"></i>
-      
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E5%85%B6%E4%BB%96/" class="category-chain-item">其他</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-    </div>
   
   
 </div>
@@ -330,9 +307,9 @@
                   <article class="post-prev col-6">
                     
                     
-                      <a href="/posts/c61/" title="android 的广播">
+                      <a href="/posts/cf01/" title="面试准备（1）--TCP协议">
                         <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">android 的广播</span>
+                        <span class="hidden-mobile">面试准备（1）--TCP协议</span>
                         <span class="visible-mobile">上一篇</span>
                       </a>
                     
@@ -340,8 +317,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/posts/7037/" title="BlogText">
-                        <span class="hidden-mobile">BlogText</span>
+                      <a href="/posts/797a/" title="数据库事务简介">
+                        <span class="hidden-mobile">数据库事务简介</span>
                         <span class="visible-mobile">下一篇</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
