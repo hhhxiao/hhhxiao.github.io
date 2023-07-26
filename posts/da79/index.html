@@ -1,7 +1,7 @@
 
 
 <!DOCTYPE html>
-<html lang="zh-CN" data-default-color-scheme=auto>
+<html lang="en" data-default-color-scheme=auto>
 
 
 
@@ -13,28 +13,28 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   
   <meta name="theme-color" content="#2f4154">
-  <meta name="author" content="John Doe">
+  <meta name="author" content="hhhxiao">
   <meta name="keywords" content="">
   
     <meta name="description" content="1. 介绍本项目是仿照Linux下的ext4文件系统所编写的一个十分简单的用户态文件系统。本系统用标准的C99编写，在Linux下编译运行通过。本系统做了如下的工作：  利用普通文件来模拟磁盘，文件系统对磁盘的所有操作均会映射到该文件(下文均简称磁盘文件)上； 磁盘文件可以随时持久化到本地以及从磁盘加载到内存； 本文件系统模拟了ext文件系统的超级块，I-node节点表，数据块的bitmap以及数">
 <meta property="og:type" content="article">
 <meta property="og:title" content="写一个简单的用户态文件系统">
 <meta property="og:url" content="http://example.com/posts/da79/index.html">
-<meta property="og:site_name" content="Hexo">
+<meta property="og:site_name" content="hhhxiao&#39;s space">
 <meta property="og:description" content="1. 介绍本项目是仿照Linux下的ext4文件系统所编写的一个十分简单的用户态文件系统。本系统用标准的C99编写，在Linux下编译运行通过。本系统做了如下的工作：  利用普通文件来模拟磁盘，文件系统对磁盘的所有操作均会映射到该文件(下文均简称磁盘文件)上； 磁盘文件可以随时持久化到本地以及从磁盘加载到内存； 本文件系统模拟了ext文件系统的超级块，I-node节点表，数据块的bitmap以及数">
-<meta property="og:locale" content="zh_CN">
+<meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://tva4.sinaimg.cn/mw690/007bwgzIgy1gwru5ui8cej3046090dfw.jpg">
 <meta property="og:image" content="https://tva2.sinaimg.cn/mw690/007bwgzIgy1gwru6d0wdrj30jc01hq2x.jpg">
 <meta property="og:image" content="https://tva4.sinaimg.cn/mw690/007bwgzIgy1gwru6psxyvj30du0aeab7.jpg">
 <meta property="article:published_time" content="2021-11-24T16:00:00.000Z">
 <meta property="article:modified_time" content="2022-10-17T15:02:04.399Z">
-<meta property="article:author" content="John Doe">
+<meta property="article:author" content="hhhxiao">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://tva4.sinaimg.cn/mw690/007bwgzIgy1gwru5ui8cej3046090dfw.jpg">
   
   
   
-  <title>写一个简单的用户态文件系统 - Hexo</title>
+  <title>写一个简单的用户态文件系统 - hhhxiao&#39;s space</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -98,7 +98,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>XHY&#39;s Blog</strong>
+      <strong>Hhhxiao&#39;s Space</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -118,7 +118,7 @@
             <li class="nav-item">
               <a class="nav-link" href="/">
                 <i class="iconfont icon-home-fill"></i>
-                首页
+                Home
               </a>
             </li>
           
@@ -130,7 +130,7 @@
             <li class="nav-item">
               <a class="nav-link" href="/archives/">
                 <i class="iconfont icon-archive-fill"></i>
-                归档
+                Archives
               </a>
             </li>
           
@@ -142,19 +142,7 @@
             <li class="nav-item">
               <a class="nav-link" href="/categories/">
                 <i class="iconfont icon-category-fill"></i>
-                分类
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/">
-                <i class="iconfont icon-tags-fill"></i>
-                标签
+                Categories
               </a>
             </li>
           
@@ -166,7 +154,19 @@
             <li class="nav-item">
               <a class="nav-link" href="/about/">
                 <i class="iconfont icon-user-fill"></i>
-                关于
+                About
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/mc/">
+                <i class="iconfont icon-xbox-fill"></i>
+                MC
               </a>
             </li>
           
@@ -178,7 +178,7 @@
             <li class="nav-item">
               <a class="nav-link" href="/links/">
                 <i class="iconfont icon-link-fill"></i>
-                友链
+                Links
               </a>
             </li>
           
@@ -223,7 +223,7 @@
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
         <time datetime="2021-11-25 00:00" pubdate>
-          2021年11月25日 凌晨
+          November 25, 2021 am
         </time>
       </span>
     
@@ -234,7 +234,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          3.8k 字
+          3.8k words
         
       </span>
     
@@ -245,7 +245,7 @@
         
         
         
-          32 分钟
+          32 mins
         
       </span>
     
@@ -378,7 +378,7 @@
                       <a href="/posts/8d2b/" title="谈谈对分布式系统的理解">
                         <i class="iconfont icon-arrowleft"></i>
                         <span class="hidden-mobile">谈谈对分布式系统的理解</span>
-                        <span class="visible-mobile">上一篇</span>
+                        <span class="visible-mobile">Previous</span>
                       </a>
                     
                   </article>
@@ -387,7 +387,7 @@
                     
                       <a href="/posts/a7b9/" title="trapdoor 设计思路">
                         <span class="hidden-mobile">trapdoor 设计思路</span>
-                        <span class="visible-mobile">下一篇</span>
+                        <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
                     
@@ -406,7 +406,7 @@
       
   <aside class="sidebar" style="margin-left: -1rem">
     <div id="toc">
-  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
   <div class="toc-body" id="toc-body"></div>
 </div>
 
@@ -480,7 +480,7 @@
   <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header text-center">
-        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
         <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -488,7 +488,7 @@
       <div class="modal-body mx-3">
         <div class="md-form mb-5">
           <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
         </div>
         <div class="list-group" id="local-search-result"></div>
       </div>
@@ -710,7 +710,7 @@
   
 
   <noscript>
-    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
   </noscript>
 </body>
 </html>

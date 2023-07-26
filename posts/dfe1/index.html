@@ -1,7 +1,7 @@
 
 
 <!DOCTYPE html>
-<html lang="zh-CN" data-default-color-scheme=auto>
+<html lang="en" data-default-color-scheme=auto>
 
 
 
@@ -13,24 +13,24 @@
   <meta http-equiv="x-ua-compatible" content="ie=edge">
   
   <meta name="theme-color" content="#2f4154">
-  <meta name="author" content="John Doe">
+  <meta name="author" content="hhhxiao">
   <meta name="keywords" content="">
   
     <meta name="description" content="题图来源：http:&#x2F;&#x2F;www.nipic.com&#x2F;show&#x2F;3&#x2F;77&#x2F;30ba1a57bcec814c.html,侵删  最小生成树在说最小生成树之前我们必须明确的几点：  在之前的无向图基础上给每一条边加上权值（weight）后，这个图就是加权图，每一边的权值是可以相加和可以比较大小的（权值一般是数字） 对于任意一棵树，欧拉给出了下面的等量关系$V &#x3D; E + 1$  我还真不知道">
 <meta property="og:type" content="article">
 <meta property="og:title" content="最小生成树">
 <meta property="og:url" content="http://example.com/posts/dfe1/index.html">
-<meta property="og:site_name" content="Hexo">
+<meta property="og:site_name" content="hhhxiao&#39;s space">
 <meta property="og:description" content="题图来源：http:&#x2F;&#x2F;www.nipic.com&#x2F;show&#x2F;3&#x2F;77&#x2F;30ba1a57bcec814c.html,侵删  最小生成树在说最小生成树之前我们必须明确的几点：  在之前的无向图基础上给每一条边加上权值（weight）后，这个图就是加权图，每一边的权值是可以相加和可以比较大小的（权值一般是数字） 对于任意一棵树，欧拉给出了下面的等量关系$V &#x3D; E + 1$  我还真不知道">
-<meta property="og:locale" content="zh_CN">
+<meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2018-08-07T16:00:00.000Z">
 <meta property="article:modified_time" content="2022-10-17T15:02:04.411Z">
-<meta property="article:author" content="John Doe">
+<meta property="article:author" content="hhhxiao">
 <meta name="twitter:card" content="summary_large_image">
   
   
   
-  <title>最小生成树 - Hexo</title>
+  <title>最小生成树 - hhhxiao&#39;s space</title>
 
   <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
 
@@ -94,7 +94,7 @@
   <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
   <div class="container">
     <a class="navbar-brand" href="/">
-      <strong>XHY&#39;s Blog</strong>
+      <strong>Hhhxiao&#39;s Space</strong>
     </a>
 
     <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
@@ -114,7 +114,7 @@
             <li class="nav-item">
               <a class="nav-link" href="/">
                 <i class="iconfont icon-home-fill"></i>
-                首页
+                Home
               </a>
             </li>
           
@@ -126,7 +126,7 @@
             <li class="nav-item">
               <a class="nav-link" href="/archives/">
                 <i class="iconfont icon-archive-fill"></i>
-                归档
+                Archives
               </a>
             </li>
           
@@ -138,19 +138,7 @@
             <li class="nav-item">
               <a class="nav-link" href="/categories/">
                 <i class="iconfont icon-category-fill"></i>
-                分类
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/">
-                <i class="iconfont icon-tags-fill"></i>
-                标签
+                Categories
               </a>
             </li>
           
@@ -162,7 +150,19 @@
             <li class="nav-item">
               <a class="nav-link" href="/about/">
                 <i class="iconfont icon-user-fill"></i>
-                关于
+                About
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/mc/">
+                <i class="iconfont icon-xbox-fill"></i>
+                MC
               </a>
             </li>
           
@@ -174,7 +174,7 @@
             <li class="nav-item">
               <a class="nav-link" href="/links/">
                 <i class="iconfont icon-link-fill"></i>
-                友链
+                Links
               </a>
             </li>
           
@@ -219,7 +219,7 @@
       <span class="post-meta">
         <i class="iconfont icon-date-fill" aria-hidden="true"></i>
         <time datetime="2018-08-08 00:00" pubdate>
-          2018年8月8日 凌晨
+          August 8, 2018 am
         </time>
       </span>
     
@@ -230,7 +230,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          652 字
+          652 words
         
       </span>
     
@@ -241,7 +241,7 @@
         
         
         
-          6 分钟
+          6 mins
         
       </span>
     
@@ -353,7 +353,7 @@
                       <a href="/posts/9f25/" title="闲聊">
                         <i class="iconfont icon-arrowleft"></i>
                         <span class="hidden-mobile">闲聊</span>
-                        <span class="visible-mobile">上一篇</span>
+                        <span class="visible-mobile">Previous</span>
                       </a>
                     
                   </article>
@@ -362,7 +362,7 @@
                     
                       <a href="/posts/4708/" title="广度优先搜索（BFS）">
                         <span class="hidden-mobile">广度优先搜索（BFS）</span>
-                        <span class="visible-mobile">下一篇</span>
+                        <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>
                     
@@ -381,7 +381,7 @@
       
   <aside class="sidebar" style="margin-left: -1rem">
     <div id="toc">
-  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;目录</p>
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
   <div class="toc-body" id="toc-body"></div>
 </div>
 
@@ -455,7 +455,7 @@
   <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
     <div class="modal-content">
       <div class="modal-header text-center">
-        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
         <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
@@ -463,7 +463,7 @@
       <div class="modal-body mx-3">
         <div class="md-form mb-5">
           <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
         </div>
         <div class="list-group" id="local-search-result"></div>
       </div>
@@ -685,7 +685,7 @@
   
 
   <noscript>
-    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
   </noscript>
 </body>
 </html>

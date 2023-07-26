@@ -4,6 +4,19 @@
   
   
   <entry>
+    <title>读书笔记(1) -- 精通Linux</title>
+    <link href="/posts/fd96/"/>
+    <url>/posts/fd96/</url>
+    
+    <content type="html"><![CDATA[<h3 id="1-Ctrl-D、Ctrl-C、Ctrl-Z"><a href="#1-Ctrl-D、Ctrl-C、Ctrl-Z" class="headerlink" title="1. Ctrl-D、Ctrl-C、Ctrl-Z"></a>1. Ctrl-D、Ctrl-C、Ctrl-Z</h3><ul><li>Ctrl-D 向shell的标准输入输入一个EOF (流输入结束)</li><li>Ctrl-C 通知shell向进程发送一个SIGINT信号 (进程中断)</li><li>Ctrl-Z 挂起进程，可恢复 <ul><li><code>fg</code></li><li><code>bg</code></li></ul></li></ul><h3 id="2-Shell通配符"><a href="#2-Shell通配符" class="headerlink" title="2. Shell通配符"></a>2. Shell通配符</h3><ul><li><code>*</code>一个或者多个任意字符</li><li><code>?</code>单个任意字符</li></ul><h3 id="3-Shell-重定向"><a href="#3-Shell-重定向" class="headerlink" title="3. Shell 重定向"></a>3. Shell 重定向</h3><ul><li><code>1&gt; [name]</code> 把标准输出流重定向到文件<code>name</code></li><li><code>2&gt; [name]</code> 把标准错误流重定向到文件<code>name</code></li><li><code>&amp;&gt; [name]</code> 把标准输出流和标准错误流重定向到文件<code>name</code></li><li><code>1&gt;&amp;2</code> 把标准输出流重定向到标准错误流</li><li><code>2&gt;&amp;1</code> 把标准错误流重定向到标准输出流</li></ul><h3 id="4-Kill"><a href="#4-Kill" class="headerlink" title="4. Kill"></a>4. Kill</h3><p><code>kill -[num]</code>表示以特定的信号终端进程</p><ul><li><code>kill</code> 默认传15，告诉进程关闭，但是进程可以拒绝</li><li><code>kill -9</code> 强制杀死，立即退出</li></ul><h3 id="5-ln"><a href="#5-ln" class="headerlink" title="5. ln"></a>5. ln</h3><p><code>ln -s 目标目录 链接名称</code> 创建文件链接</p>]]></content>
+    
+    
+    
+  </entry>
+  
+  
+  
+  <entry>
     <title>面试准备（1）--TCP协议</title>
     <link href="/posts/cf01/"/>
     <url>/posts/cf01/</url>
