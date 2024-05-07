@@ -1,0 +1,667 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="hhhxiao">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="简介又又又又整新活了，最近闲的无聊学习了一下Games101，然后为了熟悉光栅化，使用 C++和 OpenGL 写了一个简单的 Minecraft 的渲染 Demo，最终的效果大概如下图所示：这个 Demo 支持类和 Minecraft 原版相似的相机移动，动态区块生成，以及简单的着色（当然着色不是这里的重点，能看就行）。趁热打铁做个架构和技术细节的解析。 框架由于 OpenGL 是通过看http">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图形学初探——使用OpenGL写一个简单的Minectaft渲染Demo">
+<meta property="og:url" content="http://example.com/posts/762f/index.html">
+<meta property="og:site_name" content="hhhxiao&#39;s space">
+<meta property="og:description" content="简介又又又又整新活了，最近闲的无聊学习了一下Games101，然后为了熟悉光栅化，使用 C++和 OpenGL 写了一个简单的 Minecraft 的渲染 Demo，最终的效果大概如下图所示：这个 Demo 支持类和 Minecraft 原版相似的相机移动，动态区块生成，以及简单的着色（当然着色不是这里的重点，能看就行）。趁热打铁做个架构和技术细节的解析。 框架由于 OpenGL 是通过看http">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://lh3.googleusercontent.com/pw/AP1GczO7M4iHH-rEB5x5RbqExKe29ENxsKEo3tX-WHX0pcoHBEUfjZI4reRGdkoMnkuEbNwIi854PNli4kgGr6vWdfRmh8f3R3_5UoJavpbAM01n9l4tttEZMdYbjrX5U1OvIYSeEvbJJYJJ2mt5eZrYWESi=w1922-h1133-s-no-gm?authuser=0">
+<meta property="article:published_time" content="2024-05-07T15:58:06.000Z">
+<meta property="article:modified_time" content="2024-05-07T17:14:44.512Z">
+<meta property="article:author" content="hhhxiao">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://lh3.googleusercontent.com/pw/AP1GczO7M4iHH-rEB5x5RbqExKe29ENxsKEo3tX-WHX0pcoHBEUfjZI4reRGdkoMnkuEbNwIi854PNli4kgGr6vWdfRmh8f3R3_5UoJavpbAM01n9l4tttEZMdYbjrX5U1OvIYSeEvbJJYJJ2mt5eZrYWESi=w1922-h1133-s-no-gm?authuser=0">
+  
+  
+  
+  <title>图形学初探——使用OpenGL写一个简单的Minectaft渲染Demo - hhhxiao&#39;s space</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"example.com","root":"/","version":"1.9.3","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml"};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Hhhxiao&#39;s Space</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                Categories
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                About
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/mc/">
+                <i class="iconfont icon-xbox-fill"></i>
+                MC
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/links/">
+                <i class="iconfont icon-link-fill"></i>
+                Links
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              &nbsp;<i class="iconfont icon-search"></i>&nbsp;
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('https://bing.img.run/rand.php') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="图形学初探——使用OpenGL写一个简单的Minectaft渲染Demo"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2024-05-07 23:58" pubdate>
+          May 7, 2024 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          6k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          50 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">图形学初探——使用OpenGL写一个简单的Minectaft渲染Demo</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>又又又又整新活了，最近闲的无聊学习了一下<a target="_blank" rel="noopener" href="https://sites.cs.ucsb.edu/~lingqi/teaching/games101.html">Games101</a>，然后为了熟悉光栅化，使用 C++和 OpenGL 写了一个简单的 Minecraft 的渲染 Demo，最终的效果大概如下图所示：<br><img src="https://lh3.googleusercontent.com/pw/AP1GczO7M4iHH-rEB5x5RbqExKe29ENxsKEo3tX-WHX0pcoHBEUfjZI4reRGdkoMnkuEbNwIi854PNli4kgGr6vWdfRmh8f3R3_5UoJavpbAM01n9l4tttEZMdYbjrX5U1OvIYSeEvbJJYJJ2mt5eZrYWESi=w1922-h1133-s-no-gm?authuser=0" srcset="/img/loading.gif" lazyload><br>这个 Demo 支持类和 Minecraft 原版相似的相机移动，动态区块生成，以及简单的着色（当然着色不是这里的重点，能看就行）。趁热打铁做个架构和技术细节的解析。</p>
+<h2 id="框架"><a href="#框架" class="headerlink" title="框架"></a>框架</h2><p>由于 OpenGL 是通过看<a target="_blank" rel="noopener" href="https://learnopengl-cn.github.io/">https://learnopengl-cn.github.io/</a>入门的，因此这里使用的是同款框架，GLFW+GLAD，此处不再叙述。下面列出了一个简单的软件架构图：</p>
+<figure class="highlight gherkin"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs gherkin"><br>       【渲染线程】                                 【区块生成线程】<br><br><br> OpenGL渲染主循环开始<br>          |<span class="hljs-string"></span><br><span class="hljs-string">     检测相机移动                                     区块地形生成</span><br><span class="hljs-string">          </span>|<span class="hljs-string">                                                </span>|<br>请求当前帧要渲染的区块Mesh        <span class="hljs-variable">&lt;----通信----&gt;</span>      区块Mesh构建<br>          |<span class="hljs-string"></span><br><span class="hljs-string">      渲染区块</span><br><span class="hljs-string">          </span>|<br>  OpenGL渲染主循环结束<br></code></pre></td></tr></table></figure>
+
+<p>接下来的部分打算详细聊聊每个部分。</p>
+<h2 id="渲染线程"><a href="#渲染线程" class="headerlink" title="渲染线程"></a>渲染线程</h2><p>渲染线程即为 OpenGL 的主循环，总体来说也比较简单，就是首先处理鼠标和键盘事件，然后执行实际的渲染，如下所示。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs C++"><span class="hljs-comment">//handle mouse &amp; keyboard事件</span><br><span class="hljs-built_in">glClearColor</span>(<span class="hljs-number">0.2f</span>, <span class="hljs-number">0.3f</span>, <span class="hljs-number">0.3f</span>, <span class="hljs-number">1.0f</span>);<br><span class="hljs-built_in">glClear</span>(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);<br><span class="hljs-keyword">this</span>-&gt;shader-&gt;<span class="hljs-built_in">use</span>();<br>shader-&gt;<span class="hljs-built_in">setMat4</span>(<span class="hljs-string">&quot;projection&quot;</span>, Config::<span class="hljs-built_in">getProjectionMatrix</span>());<br>shader-&gt;<span class="hljs-built_in">setMat4</span>(<span class="hljs-string">&quot;view&quot;</span>, <span class="hljs-keyword">this</span>-&gt;camera_-&gt;<span class="hljs-built_in">getViewMatrix</span>());<br><span class="hljs-keyword">this</span>-&gt;level-&gt;<span class="hljs-built_in">draw</span>(shader);<br></code></pre></td></tr></table></figure>
+
+<p>处理鼠标和键盘事件的主要目的是控制相机，在 CG 中相机由拍摄方向（镜头方向），相机坐标系的向上方向，以及相机位置三个参数控制。由于在 MC 中玩家没有类似 FPS 游戏侧头瞄准那种转头，因此相机坐标系的向上方向<strong>一定是世界坐标系的 y 轴</strong>，故此处仅键盘鼠标需要控制相机方向<code>front</code>以及相机位置<code>p</code>。对于前者可使用鼠标控制，直接定义欧拉角，然后通过直角坐标系向球坐标转换即可。而对于后者，直接使用 WASD 控制镜头当前方向，此处需要注意的是，在 MC 中玩家操控时候的前后左右实际上是相对方向<code>(front.x,0,front.z)</code>的，也就是说相机的左右偏转角会影响玩家方向，但是俯仰角不会。</p>
+<p>在实际的渲染部分，首先通过全局着色器更新投影和试图矩阵，然后调用<code>level-&gt;draw()</code>函数。这一函数是一个异步请求，它在当前帧内获取当前相机位置周围一圈所有的区块，然后向区块生成器请求构建好的网格，如果请求的区块的网格不存在区块生成器只会将其加入生成队列而不会阻塞渲染线程。反之如果存在则渲染即可，如下所示：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">Level::draw</span><span class="hljs-params">(Shader *shader)</span> </span>&#123;<br>    <span class="hljs-keyword">auto</span> activeChunkList = <span class="hljs-built_in">getActiveChunkList</span>(<span class="hljs-keyword">this</span>-&gt;playerPos, Config::load_radius);<br>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> &amp;pos : activeChunkList) &#123;<br>        <span class="hljs-keyword">auto</span> *chunk = <span class="hljs-keyword">this</span>-&gt;chunk_cache_.<span class="hljs-built_in">getChunk</span>(pos);<br>        <span class="hljs-keyword">if</span> (!chunk) <span class="hljs-keyword">continue</span>;<br>        chunk-&gt;<span class="hljs-built_in">trySendData</span>();<br>        chunk-&gt;<span class="hljs-built_in">draw</span>(shader);<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>为了提升帧率，这里的渲染也有一些细节。首先，区块生成器提供的网格以子区块(16x16x16,一个高 256 的区块包含 16 个这样的子区块)为单位，以降低 VAO 绑定和解绑次数，每个子区块都会生成一个网格。另外，子区块中的网格是多个方块面（包括顶点数组和索引数组）构成的集合，每个方块面都有各自的纹理。最后，为了降低降低纹理重新绑定次数以提升性能。<strong>具有相同纹理的方块面的网格在索引数组中是连续的</strong>，这样可以极大减少纹理重新绑定的次数。在这一前提下，单个子区块的绘制逻辑如下所示：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs c++"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SubChunk::draw</span><span class="hljs-params">(Shader* shader)</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>-&gt;mesh_) &#123;<br>        <span class="hljs-keyword">auto</span> model = glm::<span class="hljs-built_in">translate</span>(<br>            glm::<span class="hljs-built_in">mat4</span>(<span class="hljs-number">1.0</span>), glm::<span class="hljs-built_in">vec3</span>(<span class="hljs-keyword">this</span>-&gt;chunk_pos_.x * <span class="hljs-number">16</span>, <span class="hljs-keyword">this</span>-&gt;sub_chunk_index_ * <span class="hljs-number">16</span>, <span class="hljs-keyword">this</span>-&gt;chunk_pos_.z * <span class="hljs-number">16</span>));<br>        shader-&gt;<span class="hljs-built_in">setMat4</span>(<span class="hljs-string">&quot;model&quot;</span>, model); <span class="hljs-comment">//在这里根据区块位置设定模型试图变换</span><br>        <span class="hljs-keyword">this</span>-&gt;mesh_-&gt;<span class="hljs-built_in">draw</span>(); <span class="hljs-comment">//调用SubChunkMesh::draw()</span><br>    &#125;<br>&#125;<br><br><br><br><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SubChunkMesh::draw</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">if</span> (<span class="hljs-keyword">this</span>-&gt;VAO == <span class="hljs-number">0</span>) <span class="hljs-keyword">return</span>;<br>    <span class="hljs-built_in">glBindVertexArray</span>(<span class="hljs-keyword">this</span>-&gt;VAO);<br>    <span class="hljs-comment">//texture可以理解为索引数组的索引，它将具有相同纹理的方块面聚集到一起,键是纹理ID，值是属于该纹理的顶点在索引数组中的偏移量和顶点个数</span><br>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> &amp;kv : <span class="hljs-keyword">this</span>-&gt;texture_mappings_) &#123;<br>        <span class="hljs-built_in">glBindTexture</span>(GL_TEXTURE_2D, kv.first);<br>        <span class="hljs-built_in">glDrawElements</span>(GL_TRIANGLES, (GLuint)kv.second.first, GL_UNSIGNED_INT,<br>                       (<span class="hljs-type">void</span> *)(kv.second.second * <span class="hljs-built_in">sizeof</span>(GLuint)));<br>    &#125;<br>&#125;<br><br></code></pre></td></tr></table></figure>
+
+<p>最后，<code>chunk-&gt;trySendData();</code>即为创建 VAO 并向 OpenGL 上下文发送数据的过程，因此这一过程只能放到主线程（即渲染线程）中。另外一提，以子区块而不是区块为单位进行渲染是因为性能和灵活性之间存在 trade-off,如果渲染粒度太大，一旦更新地形（如玩家破坏方块），这样整个区块的网格都要重新构建，因此最终选择了折中方案。</p>
+<h2 id="区块生成部分"><a href="#区块生成部分" class="headerlink" title="区块生成部分"></a>区块生成部分</h2><p>区块生成部分主要为地形生成和网格构建两个部分。对于前者，由于不是重点这里就做的比较粗糙，这里直接用柏林噪声做了个简单的随机，以 y&#x3D;64 为基准，生成偏移量，突出的部分即为山峰，凹下去低于 64 的部分全部填上水方块形成湖泊，最后把地形表面的泥土替换成草方块即可。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">PerlinTerrainGeneratror::fill</span><span class="hljs-params">(Chunk *chunk)</span> </span>&#123;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> x = <span class="hljs-number">0</span>; x &lt; <span class="hljs-number">16</span>; x++) &#123;<br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> z = <span class="hljs-number">0</span>; z &lt; <span class="hljs-number">16</span>; z++) &#123;<br>            <span class="hljs-keyword">auto</span> xx = chunk-&gt;<span class="hljs-built_in">pos</span>().x * <span class="hljs-number">16</span> + x;<br>            <span class="hljs-keyword">auto</span> zz = chunk-&gt;<span class="hljs-built_in">pos</span>().z * <span class="hljs-number">16</span> + z;<br>            <span class="hljs-keyword">auto</span> height = (<span class="hljs-type">int</span>)(<span class="hljs-keyword">this</span>-&gt;perlin_-&gt;<span class="hljs-built_in">octave2D_11</span>(xx * <span class="hljs-number">0.03</span>, zz * <span class="hljs-number">0.03</span>, <span class="hljs-number">4</span>) * <span class="hljs-number">16</span>) + <span class="hljs-number">64</span>;<br>            chunk-&gt;<span class="hljs-built_in">setBlock</span>(x, height, z, grass);<br>            <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">64</span>; i &gt;= height; i--) &#123;<br>                chunk-&gt;<span class="hljs-built_in">setBlock</span>(x, i, z, water);<br>            &#125;<br>            <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = height - <span class="hljs-number">1</span>; i &gt;= <span class="hljs-number">0</span>; i--) &#123;<br>                chunk-&gt;<span class="hljs-built_in">setBlock</span>(x, i, z, dirt);<br>            &#125;<br>        &#125;<br>    &#125;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>而对于网格构建部分，上文提到，软件以子区块为单位进行构建，具体来说，算法遍历当前子区块内的所有非空气方块，检测周围方块是不是空气（如果越界也算是空气），如果是则把该面视作需要渲染的面，此时算法搜集该面的坐标、方向以及方块类型发送给网格构建器，如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SubChunk::createMesh</span><span class="hljs-params">()</span> </span>&#123;<br>    <span class="hljs-keyword">this</span>-&gt;mesh_ = <span class="hljs-keyword">new</span> <span class="hljs-built_in">SubChunkMesh</span>();<br>    <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> x = <span class="hljs-number">0</span>; x &lt; <span class="hljs-number">16</span>; x++) &#123;<br>        <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> y = <span class="hljs-number">0</span>; y &lt; <span class="hljs-number">16</span>; y++) &#123;<br>            <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> z = <span class="hljs-number">0</span>; z &lt; <span class="hljs-number">16</span>; z++) &#123;<br>                <span class="hljs-keyword">auto</span> b = <span class="hljs-built_in">getBlock</span>(x, y, z);<br>                <span class="hljs-keyword">auto</span> p = BlockPos&#123;x, y, z&#125;;<br>                <span class="hljs-keyword">if</span> (b == air) <span class="hljs-keyword">continue</span>;<br>                <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">hasBlock</span>(x + <span class="hljs-number">1</span>, y, z)) mesh_-&gt;<span class="hljs-built_in">AddFace</span>(&#123;px, b, p&#125;);<br>                <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">hasBlock</span>(x - <span class="hljs-number">1</span>, y, z)) mesh_-&gt;<span class="hljs-built_in">AddFace</span>(&#123;nx, b, p&#125;);<br>                <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">hasBlock</span>(x, y + <span class="hljs-number">1</span>, z)) mesh_-&gt;<span class="hljs-built_in">AddFace</span>(&#123;py, b, p&#125;);<br>                <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">hasBlock</span>(x, y - <span class="hljs-number">1</span>, z)) mesh_-&gt;<span class="hljs-built_in">AddFace</span>(&#123;ny, b, p&#125;);<br>                <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">hasBlock</span>(x, y, z + <span class="hljs-number">1</span>)) mesh_-&gt;<span class="hljs-built_in">AddFace</span>(&#123;pz, b, p&#125;);<br>                <span class="hljs-keyword">if</span> (!<span class="hljs-built_in">hasBlock</span>(x, y, z - <span class="hljs-number">1</span>)) mesh_-&gt;<span class="hljs-built_in">AddFace</span>(&#123;nz, b, p&#125;);<br>            &#125;<br>        &#125;<br>    &#125;<br>    mesh_-&gt;<span class="hljs-built_in">buildData</span>();<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>然后，网格构建器根据收到的所有面的信息，首先生成整个网格顶点的坐标、法线方向以及纹理 UV 等信息，由于这里的所有面都是和坐标轴垂直的，因此相关计算较为简单。然后，网格构建器重构索引数组，将具有相同纹理的面聚集到一起，并生成对应的纹理映射（即上面提到的<code>texture_mappings_</code>）。这一步的源码如下所示：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">void</span> <span class="hljs-title">SubChunkMesh::buildData</span><span class="hljs-params">()</span> </span>&#123;<br>    std::unordered_map&lt;GLuint, std::vector&lt;FacePointList&gt;&gt; temp_textures_ids_;<br>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> &amp;block : <span class="hljs-keyword">this</span>-&gt;blocks_) &#123;  <span class="hljs-comment">// 遍历每一个面</span><br>        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> block_face : block.second) &#123;<br>            <span class="hljs-keyword">auto</span> face = <span class="hljs-built_in">static_cast</span>&lt;Face&gt;(block_face.first);<br>            <span class="hljs-keyword">auto</span> face_info = block_face.second;<br>            <span class="hljs-keyword">auto</span> vs = <span class="hljs-built_in">createFaceVertices</span>(face);<br>            <span class="hljs-keyword">auto</span> normal = <span class="hljs-built_in">getFaceNormal</span>(face);<br>            <span class="hljs-comment">// 4个顶点</span><br>            <span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> i = <span class="hljs-number">0</span>; i &lt; vs.<span class="hljs-built_in">size</span>(); i++) &#123;<br>                <span class="hljs-keyword">auto</span> U = <span class="hljs-number">0.0f</span>, V = <span class="hljs-number">0.0f</span>;<br>                <span class="hljs-keyword">if</span> (i == <span class="hljs-number">1</span>) V = <span class="hljs-number">1.0f</span>;<br>                <span class="hljs-keyword">if</span> (i == <span class="hljs-number">2</span>) U = <span class="hljs-number">1.0f</span>;<br>                <span class="hljs-keyword">if</span> (i == <span class="hljs-number">3</span>) &#123;<br>                    U = <span class="hljs-number">1.0f</span>, V = <span class="hljs-number">1.0f</span>;<br>                &#125;<br>                <span class="hljs-keyword">auto</span> vi = vs[i];<br>                <span class="hljs-keyword">auto</span> dx = <span class="hljs-built_in">static_cast</span>&lt;GLfloat&gt;(vi % <span class="hljs-number">2</span>);<br>                <span class="hljs-keyword">auto</span> dy = <span class="hljs-built_in">static_cast</span>&lt;GLfloat&gt;(vi &gt;= <span class="hljs-number">4</span> ? <span class="hljs-number">1</span> : <span class="hljs-number">0</span>);<br>                <span class="hljs-keyword">auto</span> dz = <span class="hljs-built_in">static_cast</span>&lt;GLfloat&gt;((vi % <span class="hljs-number">4</span>) &gt;= <span class="hljs-number">2</span> ? <span class="hljs-number">1</span> : <span class="hljs-number">0</span>);<br>                VertexAttribute va&#123;<span class="hljs-built_in">static_cast</span>&lt;GLfloat&gt;(face_info.pos.x + dx),<br>                                   <span class="hljs-built_in">static_cast</span>&lt;GLfloat&gt;(face_info.pos.y + dy),<br>                                   <span class="hljs-built_in">static_cast</span>&lt;GLfloat&gt;(face_info.pos.z + dz),<br>                                   <span class="hljs-number">1.0f</span>,<span class="hljs-number">0.35f</span>,<span class="hljs-number">0.21f</span>,U,V,<br>                                   (<span class="hljs-type">float</span>)normal.x,<br>                                   (<span class="hljs-type">float</span>)normal.y,<br>                                   (<span class="hljs-type">float</span>)normal.z&#125;;<br>                <span class="hljs-keyword">this</span>-&gt;vertices_.<span class="hljs-built_in">push_back</span>(va);<br>            &#125;<br>            <span class="hljs-keyword">auto</span> size = (GLuint)vertices_.<span class="hljs-built_in">size</span>();<br>            FacePointList list&#123;size - <span class="hljs-number">4u</span>, size - <span class="hljs-number">3u</span>, size - <span class="hljs-number">2u</span>, size - <span class="hljs-number">3u</span>, size - <span class="hljs-number">2u</span>, size - <span class="hljs-number">1u</span>&#125;;<br>            temp_textures_ids_[TexturePool::<span class="hljs-built_in">instance</span>().<span class="hljs-built_in">getTextureID</span>(block_face.second.type, block_face.second.face)]<br>                .<span class="hljs-built_in">push_back</span>(list);<br>        &#125;<br>    &#125;<br><br>    <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> &amp;kv : temp_textures_ids_) &#123;<br>        <span class="hljs-keyword">this</span>-&gt;texture_mappings_[kv.first] = &#123;<span class="hljs-number">6</span> * kv.second.<span class="hljs-built_in">size</span>(), <span class="hljs-keyword">this</span>-&gt;indices_.<span class="hljs-built_in">size</span>()&#125;;<br>        <span class="hljs-keyword">for</span> (<span class="hljs-keyword">auto</span> face : kv.second) &#123;<br>            indices_.<span class="hljs-built_in">push_back</span>(face.p1);<br>            indices_.<span class="hljs-built_in">push_back</span>(face.p2);<br>            indices_.<span class="hljs-built_in">push_back</span>(face.p3);<br>            indices_.<span class="hljs-built_in">push_back</span>(face.p4);<br>            indices_.<span class="hljs-built_in">push_back</span>(face.p5);<br>            indices_.<span class="hljs-built_in">push_back</span>(face.p6);<br>        &#125;<br>    &#125;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>最后，有关异步的部分由于不少重点就不再过多赘述，这里使用了简单的任务队列以及线程池来完成这一工作。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>初学图形学各方面都不熟悉，因此写这个还是有点煎熬，在设计架构和编写相机移动上多花了点时间，不过好在起码熟悉了 OpenGL 编程的基本思路和方法，另外整个项目是开源的，代码在<a target="_blank" rel="noopener" href="https://github.com/hhhxiao/CubeWorld">https://github.com/hhhxiao/CubeWorld</a>，有兴趣的可以看看。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+</div>
+
+
+              
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/posts/fd96/" title="读书笔记(1) -- 精通Linux">
+                        <span class="hidden-mobile">读书笔记(1) -- 精通Linux</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;Table of Contents</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+  <script>
+  Fluid.utils.createScript('https://lib.baomitu.com/mermaid/8.14.0/mermaid.min.js', function() {
+    mermaid.initialize({"theme":"default"});
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('mermaid' in window) {
+        mermaid.init();
+      }
+    });
+  });
+</script>
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.0/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.18.2/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>
